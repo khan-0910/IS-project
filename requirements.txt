@@ -1,0 +1,33 @@
+# EXOVET backend dependencies
+# Python 3.11+ (3.13 recommended; any CPython >= 3.11 works on macOS/Linux)
+
+# --- Numerical / scientific core ---
+numpy>=2.1
+scipy>=1.16
+pandas>=2.2
+astropy>=6.1
+matplotlib>=3.9
+scikit-learn>=1.5
+
+# --- Astronomical pipeline ---
+lightkurve>=2.6          # TESS/MAST retrieval, light-curve objects
+wotan>=1.10              # detrending (flatten) — transit-preserving
+transitleastsquares>=1.32 # TLS periodic transit search
+batman-package>=2.5      # transit model (Kreidberg 2015)
+emcee>=3.1               # MCMC parameter estimation
+
+# --- Deep learning ---
+# torch: on Apple Silicon `pip install torch` ships an arm64 build with MPS.
+# On Linux/Windows CPU-only boxes you can use the CPU wheel index instead:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=2.9
+
+# --- Backend ---
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+pydantic>=2.9
+
+# --- Testing ---
+pytest>=8.2
+httpx>=0.27

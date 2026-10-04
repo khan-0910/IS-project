@@ -1,0 +1,18 @@
+{
+  "catalog": {
+    "source": "https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv",
+    "fetched_at_utc": "2026-10-03T07:06:45Z",
+    "n_rows": 8148,
+    "from_cache": true
+  },
+  "n_kept": 7317,
+  "n_excluded_ambiguous": 513,
+  "class_counts": {
+    "planet_candidate": 6352,
+    "eclipsing_binary": 385,
+    "instrumental_systematic": 96,
+    "contamination_blend": 484
+  },
+  "mapping_file": "/mnt/c/Users/khana/OneDrive/Desktop/Intelligent Systems Project/data/datasets/targets_labeled.csv",
+  "rules_version": 1
+}
