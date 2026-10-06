@@ -59,6 +59,64 @@ def test_cache_key_stable_and_mode_sensitive(tmp_path, monkeypatch):
     assert k1 != k3 != k4
 
 
+def test_cache_key_data_stamp_sensitive(tmp_path, monkeypatch):
+    """The key must change when the bundle manifest appears (data changed)."""
+    import exovet.config.settings as st
+    monkeypatch.setattr(st, "CACHE_DIR", tmp_path)
+    k_before = analysis_cache_key(77, "quick")
+    d = tmp_path / "tic_77"
+    d.mkdir(parents=True)
+    (d / "bundle.json").write_text("{}", encoding="utf-8")
+    k_after = analysis_cache_key(77, "quick")
+    assert k_before != k_after
+
+
+def test_analyze_tic_second_run_hits_cache(tmp_path, monkeypatch):
+    """Regression: the analysis-cache key must be computed AFTER ingest.
+
+    On a target's first-ever analysis the bundle manifest is created by
+    ingest itself, so a key computed before ingest carries data_stamp=""
+    and the stored report could never be hit again (run 2 always missed
+    and re-ran the whole pipeline).
+    """
+    import exovet.config.settings as st
+    import exovet.inference.pipeline as pipe
+    monkeypatch.setattr(st, "CACHE_DIR", tmp_path / "cache")
+    monkeypatch.setattr(st, "PROCESSED_DIR", tmp_path / "processed")
+
+    calls = {"fetch": 0, "analyze": 0}
+
+    def fake_fetch(tic_id, **kw):
+        calls["fetch"] += 1
+        d = st.CACHE_DIR / f"tic_{tic_id}"
+        if not (d / "bundle.json").exists():   # production ingest writes it once
+            d.mkdir(parents=True, exist_ok=True)
+            (d / "bundle.json").write_text(
+                json.dumps({"tic_id": tic_id}), encoding="utf-8")
+        return {"tic_id": tic_id, "sectors": []}
+
+    def fake_stellar(tic_id, **kw):
+        return {}
+
+    def fake_analyze(bundle, **kw):
+        calls["analyze"] += 1
+        return {"status": "ok", "target_id": f"TIC {bundle['tic_id']}",
+                "classification": {"predicted_class": "eclipsing_binary"},
+                "versions": {"pipeline": "test"}}
+
+    monkeypatch.setattr("exovet.data.ingest.fetch_tess_lightcurve", fake_fetch)
+    monkeypatch.setattr("exovet.data.ingest.fetch_stellar_metadata", fake_stellar)
+    monkeypatch.setattr(pipe, "analyze_lightcurve", fake_analyze)
+
+    r1 = pipe.analyze_tic(42, fast=True)
+    assert not r1.get("cached")
+    r2 = pipe.analyze_tic(42, fast=True)
+    assert r2["cached"] is True
+    assert r2["target_id"] == "TIC 42"
+    assert calls["analyze"] == 1      # second run skipped the pipeline
+    assert calls["fetch"] == 2        # cheap bundle-cache read still happens
+
+
 def test_cache_roundtrip(tmp_path, monkeypatch):
     import exovet.config.settings as st
     monkeypatch.setattr(st, "PROCESSED_DIR", tmp_path)

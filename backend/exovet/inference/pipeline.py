@@ -268,16 +268,20 @@ def analyze_tic(tic_id: int, fast: bool = False,
     tr = tracker or StageTracker()
 
     mode = "quick" if fast else "full"
-    cache_key = analysis_cache_key(tic_id, mode)
-    if not force_refresh:
-        cached = load_cached_analysis(cache_key)
-        if cached is not None:
-            cached["cached"] = True
-            return cached
 
     from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutTimeout
     tr.begin("fetching_data")
     bundle = fetch_tess_lightcurve(tic_id)
+    # Key AFTER the bundle exists: on a target's first-ever analysis the
+    # bundle manifest is only written by ingest, so a key computed earlier
+    # carries data_stamp="" and the stored report could never be hit again.
+    cache_key = analysis_cache_key(tic_id, mode)
+    if not force_refresh:
+        cached = load_cached_analysis(cache_key)
+        if cached is not None:
+            tr.end("fetching_data")
+            cached["cached"] = True
+            return cached
     try:
         # catalog metadata is contextual only; bound it so a slow MAST
         # catalog query can never dominate the analysis wall-clock

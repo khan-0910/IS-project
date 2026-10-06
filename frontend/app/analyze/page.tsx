@@ -405,7 +405,7 @@ function Workspace() {
                 <span className="label m">PRIMARY RESULT</span>
                 <span className="sub" style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   {rep.cached && <span className="chip amber">CACHED RESULT</span>}
-                  {(sum?.run_mode ?? rep.run_mode)?.toUpperCase() === "QUICK" ? "QUICK ANALYSIS" : "FULL ANALYSIS"}
+                  {["QUICK", "FAST"].includes((sum?.run_mode ?? rep.run_mode)?.toUpperCase() ?? "") ? "QUICK ANALYSIS" : "FULL ANALYSIS"}
                   · <button className="tab" onClick={() => setDrawer(!drawer)} aria-expanded={drawer}>
                     TARGET INFO {drawer ? "▾" : "▸"}
                   </button>
