@@ -39,6 +39,7 @@ from exovet.config import settings
 from exovet.inference.batch import MAX_BATCH, default_result_path
 from exovet.inference.progress import StageTracker
 from exovet.utils.errors import ExoVetError
+from exovet.utils.jsonio import finite_json, read_json
 
 app = FastAPI(title="EXOVET", version="0.1.0",
               description="AI-enabled exoplanet vetting — every number "
@@ -106,7 +107,8 @@ def _run_job(job_id: str, fn, *args, tracker: StageTracker | None = None) -> Non
         else:
             report = fn(*args)
         out = settings.RESULT_DIR / f"{job_id}.json"
-        out.write_text(json.dumps(report, indent=1), encoding="utf-8")
+        out.write_text(json.dumps(finite_json(report), indent=1),
+                       encoding="utf-8")
         with _JOB_LOCK:
             JOBS[job_id]["status"] = "done" if report.get("status") == "ok" \
                 else "error"
@@ -201,7 +203,7 @@ def job_status(job_id: str, brief: int = Query(0)):
         # persisted from a previous server run — reports outlive the process
         path = settings.RESULT_DIR / f"{job_id}.json"
         if path.exists() and all(c in "0123456789abcdef" for c in job_id):
-            report = json.loads(path.read_text(encoding="utf-8"))
+            report = read_json(path)
             if brief:
                 return _brief_from_report(job_id, report)
             return {"status": "done", "report_path": str(path),
@@ -217,8 +219,7 @@ def job_status(job_id: str, brief: int = Query(0)):
     out = dict(job)
     out.pop("tracker", None)
     if job.get("report_path"):
-        out["report"] = json.loads(Path(job["report_path"]).read_text(
-            encoding="utf-8"))
+        out["report"] = read_json(job["report_path"])
     return out
 
 
@@ -243,7 +244,7 @@ def _brief(job: dict) -> dict:
     # when done, attach the headline (small) fields for instant rendering
     if job["status"] == "done" and job.get("report_path"):
         try:
-            rep = json.loads(Path(job["report_path"]).read_text(encoding="utf-8"))
+            rep = read_json(job["report_path"])
             out["summary"] = _headline(rep)
             out["cached"] = rep.get("cached", False)
             out["versions"] = rep.get("versions")
@@ -297,7 +298,7 @@ def job_result(job_id: str):
             else settings.RESULT_DIR / f"{job_id}.json")
     if not path.exists():
         raise HTTPException(404, "no result stored for this job id")
-    report = json.loads(path.read_text(encoding="utf-8"))
+    report = read_json(path)
     return {"job_id": job_id, "status":
             ("done" if report.get("status") == "ok" else "error"),
             "report": report}
@@ -351,7 +352,7 @@ def demo_curve(tic: int = 261136679):
         for path in sorted(settings.RESULT_DIR.glob("*.json"),
                            key=lambda p: p.stat().st_mtime, reverse=True):
             try:
-                rep = json.loads(path.read_text(encoding="utf-8"))
+                rep = read_json(path)
                 if rep.get("series", {}).get("detrended"):
                     return {"target_id": rep.get("target_id"),
                             "data_source": "stored report",
@@ -380,7 +381,7 @@ def results_latest():
     for path in sorted(settings.RESULT_DIR.glob("*.json"),
                        key=lambda p: p.stat().st_mtime, reverse=True):
         try:
-            rep = json.loads(path.read_text(encoding="utf-8"))
+            rep = read_json(path)
         except Exception:
             continue
         det = rep.get("detection") or {}
@@ -416,7 +417,7 @@ def results_index(limit: int = Query(100, ge=1, le=500)):
         if path.name.startswith("verify_"):
             continue
         try:
-            rep = json.loads(path.read_text(encoding="utf-8"))
+            rep = read_json(path)
         except Exception:                         # noqa: BLE001
             continue
         det = rep.get("detection") or {}
@@ -453,7 +454,7 @@ def report_markdown(job_id: str):
     if not path.exists():
         raise HTTPException(404, "no result stored for this job id")
     from exovet.reporting.markdown import report_markdown_text
-    rep = json.loads(path.read_text(encoding="utf-8"))
+    rep = read_json(path)
     return PlainTextResponse(report_markdown_text(rep, job_id),
                              media_type="text/markdown",
                              headers={"Content-Disposition":
@@ -593,7 +594,7 @@ def verify_batch_status(job_id: str):
         # results outlive the process — reload a persisted batch file
         path = default_result_path(job_id)
         if path.exists():
-            doc = json.loads(path.read_text(encoding="utf-8"))
+            doc = read_json(path)
             return {"status": "done", "done": len(doc.get("records", [])),
                     "total": doc.get("config", {}).get("n_targets"),
                     **doc}
@@ -602,5 +603,5 @@ def verify_batch_status(job_id: str):
     if job["status"] in ("done", "error"):
         path = default_result_path(job_id)
         if path.exists():
-            out.update(json.loads(path.read_text(encoding="utf-8")))
+            out.update(read_json(path))
     return out

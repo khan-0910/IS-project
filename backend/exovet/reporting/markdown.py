@@ -78,6 +78,24 @@ def report_markdown_text(rep: dict, job_id: str = "") -> str:
       f"FAP: {det.get('fap', '—')}")
     a(f"- Transits detected: {det.get('n_transits', '—')} · "
       f"signal: {det.get('signal_strength', '—')}")
+    if det.get("duration_folded_days"):
+        a(f"- Duration from folded curve (measured at half depth): "
+          f"{_fmt(det['duration_folded_days'] * 24, 2)} h")
+    sw = det.get("search_window_days")
+    if sw and all(v is not None for v in sw):
+        a(f"- Search window: {_fmt(sw[0], 1)}–{_fmt(sw[1], 1)} d (the transit "
+          "fit is restricted to this window to avoid phase drift)")
+    hc = det.get("harmonic_check") or {}
+    if hc.get("switched_to_multiple"):
+        a(f"- Harmonic check: period switched ×{hc['switched_to_multiple']} "
+          f"(event realization {_fmt(hc.get('realization_at_tls_period'), 2)} "
+          f"→ {_fmt(hc.get('realization_after'), 2)})")
+    elif hc.get("realization_at_tls_period") is not None:
+        a(f"- Harmonic check: no alias switch · event realization at the "
+          f"detected period: {_fmt(hc['realization_at_tls_period'], 2)} "
+          "(≈1.0 for a real transit train)")
+    for w in det.get("warnings") or []:
+        a(f"- ⚠ {w}")
     a("")
     a("> TLS (Transit Least Squares) searches for periodic, transit-shaped dips "
       "in the detrended light curve.")
@@ -141,6 +159,15 @@ def report_markdown_text(rep: dict, job_id: str = "") -> str:
         a(f"- Reduced χ²: {_fmt(q.get('reduced_chi2'), 2)} · "
           f"residual scatter: {_fmt(q.get('residual_std_ppm'), 0)} ppm")
         a(f"- MCMC acceptance fraction: {_fmt(fit.get('acceptance_fraction'), 3)}")
+        if fit.get("n_points_before_decimation"):
+            a(f"- Fitted points: {fit.get('n_points')} (decimated from "
+              f"{fit['n_points_before_decimation']})")
+        peb = fit.get("per_event_baseline") or {}
+        if peb.get("applied"):
+            a(f"- Baseline: {peb.get('method')} · normalized "
+              f"{peb.get('n_events_normalized')}/{peb.get('n_events')} events")
+        if fit.get("window_note"):
+            a(f"- Fit window: {fit['window_note']}")
     elif fit.get("status") == "failed":
         a(f"**Transit fit FAILED** — {fit.get('error', 'unknown error')}. "
           "All earlier stages remain valid.")

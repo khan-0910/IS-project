@@ -132,3 +132,15 @@ MCMC_STEPS = 3000
 MCMC_BURN = 1000
 MCMC_WALKERS = 32
 MCMC_ENABLED = True
+MCMC_MAX_POINTS = 6000          # decimate the fitted window above this (documented)
+
+# --- harmonic / alias disambiguation (evidence-based, light-curve only) -----
+# TLS can lock onto P_true/N when the true period is long and eclipses are
+# sparse.  A multiple N*P is preferred ONLY when (a) the TLS periodogram has a
+# real peak there (power >= HARMONIC_MIN_POWER_RATIO x the best peak), and
+# (b) folding at N*P concentrates the eclipse groups clearly better.
+HARMONIC_CHECK_ENABLED = True
+HARMONIC_MAX_MULTIPLE = 12
+HARMONIC_MIN_POWER_RATIO = 0.5
+HARMONIC_MIN_CONC_GAIN = 0.15
+HARMONIC_MIN_TRANSITS = 3

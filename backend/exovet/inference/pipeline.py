@@ -40,6 +40,9 @@ _PIPELINE_CONFIG_KEYS = (
     "TLS_OVERSAMPLING", "TLS_MAX_POINTS", "TLS_MAX_SPAN_DAYS",
     "GLOBAL_POINTS", "LOCAL_WINDOW_POINTS", "PHASE_POINTS",
     "MC_DROPOUT_PASSES", "MCMC_STEPS", "MCMC_WALKERS",
+    "MCMC_MAX_POINTS", "HARMONIC_CHECK_ENABLED", "HARMONIC_MAX_MULTIPLE",
+    "HARMONIC_MIN_POWER_RATIO", "HARMONIC_MIN_CONC_GAIN",
+    "HARMONIC_MIN_TRANSITS",
 )
 
 
@@ -221,9 +224,31 @@ def analyze_lightcurve(bundle, stellar: dict | None = None,
     elif det.period and det.t0 and det.duration:
         tr.begin("transit_fit")
         try:
-            fit_result = fit_transit(clean.time, clean.detrended,
-                                     clean.flux_err, det.period, det.t0,
-                                     det.duration)
+            # the folded-curve T14 is measured, not grid-interpolated; use it
+            # for the fit window when it is the larger (TLS grid runs short)
+            fit_duration = max(det.duration, det.duration_folded or 0.0)
+            ft, fy, fyerr = clean.time, clean.detrended, clean.flux_err
+            window_note = None
+            sw = det.search_window_days
+            if sw is not None:
+                # fit only the searched window: with the period fixed, TLS-
+                # level accuracy (~1e-4 d) drifts the transit phase by up to
+                # ~0.5 d across multi-year baselines and smears the signal
+                # (measured on WASP-18 b: 6-sector fits lost ~75% of the
+                # depth); inside the search window the drift stays small
+                m = (ft >= sw[0]) & (ft <= sw[1])
+                if m.sum() >= settings.MIN_POINTS and not m.all():
+                    ft, fy = ft[m], fy[m]
+                    if fyerr is not None:
+                        fyerr = fyerr[m]
+                    window_note = (f"fit restricted to the TLS search window "
+                                   f"({sw[0]:.1f} to {sw[1]:.1f} d) — the "
+                                   "fixed period drifts transit phase across "
+                                   "longer baselines")
+            fit_result = fit_transit(ft, fy, fyerr, det.period, det.t0,
+                                     fit_duration)
+            if window_note:
+                fit_result["window_note"] = window_note
             tr.end("transit_fit")
             report["transit_fit"] = fit_result
         except Exception as exc:                  # noqa: BLE001

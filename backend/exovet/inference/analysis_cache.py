@@ -22,9 +22,13 @@ import json
 from pathlib import Path
 
 from exovet.config import settings
+from exovet.utils.jsonio import finite_json, read_json
 
 
-CACHE_SCHEMA = 2  # bump to invalidate entries produced by older report shapes
+CACHE_SCHEMA = 5  # bump to invalidate entries produced by older report shapes
+                  # (5: low-realization period-suspect warning, 2026-10-06;
+                  #  4: search-window fit + new report fields;
+                  #  3: harmonic scan + per-event-baseline MCMC)
 
 
 def analysis_cache_key(tic_id: int, mode: str = "full") -> str:
@@ -59,7 +63,7 @@ def load_cached_analysis(key: str) -> dict | None:
     if not p.exists():
         return None
     try:
-        rep = json.loads(p.read_text(encoding="utf-8"))
+        rep = read_json(p)
         if rep.get("status") != "ok":
             return None
         rep["cache_key"] = key
@@ -74,7 +78,7 @@ def store_cached_analysis(key: str, report: dict) -> None:
     try:
         p = _cache_path(key)
         tmp = p.with_suffix(".tmp")
-        tmp.write_text(json.dumps(report), encoding="utf-8")
+        tmp.write_text(json.dumps(finite_json(report)), encoding="utf-8")
         tmp.replace(p)
     except Exception:                             # noqa: BLE001
         pass

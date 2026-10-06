@@ -57,6 +57,12 @@ class TLSDetection:
     transit_times: np.ndarray | None = None
     transit_depths: np.ndarray | None = None
     transit_depth_errs: np.ndarray | None = None
+    duration_folded: float | None = None      # measured from the folded curve
+    harmonic_check: dict | None = None        # alias-scan diagnostics
+    search_window_days: tuple[float, float] | None = None
+    # ^ (min, max) time actually searched — the multi-sector cap can select a
+    #   subset of the light curve; fitting outside it would smear transits
+    #   because the fixed TLS period drifts ~0.1-1 d over multi-year baselines
     warnings: list[str] = field(default_factory=list)
 
     def summary(self) -> dict:
@@ -67,6 +73,7 @@ class TLSDetection:
             "t0_days": _f(self.t0),
             "duration_days": _f(self.duration),
             "duration_hours": _f(self.duration * 24.0 if self.duration else None),
+            "duration_folded_days": _f(self.duration_folded),
             "depth": _f(self.depth),
             "depth_ppm": _f(self.depth * 1e6 if self.depth else None),
             "snr": _f(self.snr),
@@ -79,6 +86,10 @@ class TLSDetection:
             "signal_strength": self.signal_strength,
             "sde_threshold": settings.TLS_MIN_SIGNAL_SDE,
             "depth_gate": self.depth_gate_used,
+            "harmonic_check": self.harmonic_check,
+            "search_window_days": ([_f(self.search_window_days[0]),
+                                    _f(self.search_window_days[1])]
+                                   if self.search_window_days else None),
             "warnings": self.warnings,
         }
 
@@ -160,6 +171,218 @@ def _fold_snr(time: np.ndarray, flux: np.ndarray, period: float, t0: float,
         return None, depth, n_in
     snr = depth / (sigma / np.sqrt(n_in))
     return float(snr), float(depth), n_in
+
+
+def _duration_from_fold(time: np.ndarray, flux: np.ndarray, period: float,
+                        t0: float, depth: float) -> float | None:
+    """T14 at half depth measured from the folded, time-uniform curve.
+
+    The TLS duration grid assumes solar density and can run systematically
+    short; here the total time below half depth near phase 0 (primary side
+    only, so a deep secondary eclipse does not inflate it) is converted to a
+    duration via the uniform-in-time sampling fraction.  Returns None when
+    the measurement is not credible.
+    """
+    if not (period and t0 and depth and period > 0 and depth > 1e-4):
+        return None
+    t = np.asarray(time, dtype=np.float64)
+    y = np.asarray(flux, dtype=np.float64)
+    good = np.isfinite(t) & np.isfinite(y)
+    t, y = t[good], y[good]
+    if t.size < 50:
+        return None
+    ph = ((t - t0 + 0.5 * period) % period) - 0.5 * period
+    hemi = np.abs(ph) <= (0.25 * period)
+    if int(hemi.sum()) < 20:
+        return None
+    below = (y <= (1.0 - 0.5 * depth)) & hemi
+    dur = float(below.sum()) / float(hemi.sum()) * (0.5 * period)
+    if dur <= 0 or dur > 0.3 * period or int(below.sum()) < 5:
+        return None
+    return dur
+
+
+def eclipse_concentration(time: np.ndarray, flux: np.ndarray, period: float,
+                          t0: float, duration: float, depth: float) -> float | None:
+    """Fraction of eclipse-depth points that fold near an eclipse phase.
+
+    A point counts as "eclipse-depth" when it lies below half the given depth.
+    "Near an eclipse phase" means within ±0.75·duration of phase 0 (primary)
+    or phase 0.5 (secondary).  At the TRUE period every eclipse group aligns
+    (concentration → 1); at a too-short alias P_true/N the groups scatter to
+    N distinct phases (concentration → ~1/N for primary-only signals).
+    """
+    if not (period and duration and depth and period > 0
+            and duration > 0 and depth > 0):
+        return None
+    t = np.asarray(time, dtype=np.float64)
+    y = np.asarray(flux, dtype=np.float64)
+    good = np.isfinite(t) & np.isfinite(y)
+    t, y = t[good], y[good]
+    if t.size < 20:
+        return None
+    ph = ((t - t0 + 0.5 * period) % period) - 0.5 * period
+    sel = y <= (1.0 - 0.5 * depth)
+    if int(sel.sum()) < 5:
+        return None
+    ph_sel = ph[sel]
+    d_primary = np.abs(ph_sel)
+    d_secondary = np.abs(np.abs(ph_sel) - 0.5 * period)
+    near = np.minimum(d_primary, d_secondary) <= (0.75 * duration)
+    return float(near.mean())
+
+
+def _peak_power_near(pg_p: np.ndarray, pg_pow: np.ndarray, period: float,
+                     rel_tol: float = 0.02) -> float | None:
+    """Max periodogram power within ±rel_tol of ``period`` (None if absent)."""
+    if pg_p.size == 0 or not (period and period > 0):
+        return None
+    m = np.abs(pg_p - period) <= (rel_tol * period)
+    if not m.any():
+        return None
+    p = pg_pow[m]
+    p = p[np.isfinite(p)]
+    return float(p.max()) if p.size else None
+
+
+def _n_events(time: np.ndarray, period: float, t0: float) -> int:
+    t = np.asarray(time, dtype=np.float64)
+    if t.size == 0 or not (period and period > 0):
+        return 0
+    return int(np.floor((t.max() - t0) / period)) - int(np.floor((t.min() - t0) / period)) + 1
+
+
+def event_realization(time: np.ndarray, flux: np.ndarray, period: float,
+                      t0: float, duration: float, depth: float) -> float | None:
+    """Fraction of predicted transit epochs with an observed dip.
+
+    For every epoch t0 + m·period covered by the data, an event "realizes"
+    when at least one sample within ±0.5·duration lies below half the depth.
+    The dip level is floored at 4× the robust point-to-point scatter so that
+    a heavily diluted candidate depth (e.g. at a sub-multiple of the true
+    period, where the folded median sits at the out-of-transit level) cannot
+    push the threshold inside the noise band and mark every epoch "dipped".
+    At a too-short alias P_true/N only ~1/N of the predicted epochs show a
+    dip; at the true period essentially all do (data gaps lower it, which the
+    decision threshold accounts for).
+    """
+    if (period is None or t0 is None or duration is None or depth is None
+            or period <= 0 or duration <= 0 or depth <= 0):
+        return None
+    t = np.asarray(time, dtype=np.float64)
+    y = np.asarray(flux, dtype=np.float64)
+    good = np.isfinite(t) & np.isfinite(y)
+    t, y = t[good], y[good]
+    if t.size < 20:
+        return None
+    order = np.argsort(t)
+    t, y = t[order], y[order]
+    sigma = float(np.median(np.abs(y - np.median(y))) * 1.4826)
+    floor = 4.0 * sigma if (np.isfinite(sigma) and sigma > 0) else 0.0
+    dip_lvl = 1.0 - max(0.5 * depth, floor)
+    m0 = int(np.ceil((t.min() - t0 - duration) / period))
+    m1 = int(np.floor((t.max() - t0 + duration) / period))
+    if m1 < m0:
+        return None
+    predicted = realized = 0
+    for m in range(m0, m1 + 1):
+        e = t0 + m * period
+        lo = np.searchsorted(t, e - 0.5 * duration)
+        hi = np.searchsorted(t, e + 0.5 * duration)
+        predicted += 1
+        if hi > lo and bool((y[lo:hi] <= dip_lvl).any()):
+            realized += 1
+    return float(realized) / predicted if predicted else None
+
+
+def harmonic_scan(time: np.ndarray, flux: np.ndarray, period: float,
+                  t0: float, duration: float, depth: float,
+                  pg_p: np.ndarray, pg_pow: np.ndarray) -> tuple[float | None, dict]:
+    """Evidence-based alias disambiguation over integer multiples of P*.
+
+    TLS can report a period shorter than the true one when the true period is
+    long and eclipses sparse.  A multiple N·P* replaces P* only when ALL of:
+
+    (a) the TLS periodogram has a real peak at N·P* (power ≥
+        HARMONIC_MIN_POWER_RATIO × the peak at P*),
+    (b) at least HARMONIC_MIN_TRANSITS eclipse events fit in the data span,
+    (c) the current period leaves most of its predicted transit epochs
+        unrealized (event realization ≤ 0.7 — the signature of a too-short
+        alias), and
+    (d) folding at N·P* realizes essentially all of its predicted epochs
+        (≥ 0.8) with a clear gain over P*.
+
+    Pure light-curve evidence — no catalog information enters the decision.
+
+    Returns (period_after_scan_or_None, diagnostics dict).
+    """
+    diag: dict = {"enabled": bool(settings.HARMONIC_CHECK_ENABLED),
+                  "checked": [], "switched_to_multiple": None}
+    if not settings.HARMONIC_CHECK_ENABLED:
+        return None, diag
+    if (period is None or t0 is None or duration is None or depth is None
+            or period <= 0 or duration <= 0 or depth <= 0):
+        diag["reason"] = "insufficient detection quantities"
+        return None, diag
+    t = np.asarray(time, dtype=np.float64)
+    y = np.asarray(flux, dtype=np.float64)
+    good = np.isfinite(t) & np.isfinite(y)
+    t, y = t[good], y[good]
+    if t.size < settings.MIN_POINTS:
+        diag["reason"] = "too few samples"
+        return None, diag
+
+    real0 = event_realization(t, y, period, t0, duration, depth)
+    diag["realization_at_tls_period"] = _f(real0)
+    pow0 = _peak_power_near(pg_p, pg_pow, period)
+    diag["power_at_tls_period"] = pow0
+    if real0 is None or pow0 is None or pow0 <= 0:
+        diag["reason"] = "fold or periodogram power unavailable"
+        return None, diag
+
+    best = None  # (n, period_c, realization_c, depth_c)
+    for n in range(2, settings.HARMONIC_MAX_MULTIPLE + 1):
+        p_c = period * n
+        if pg_p.size and p_c > float(pg_p.max()) * 1.02:
+            break                       # outside the searched period range
+        pw = _peak_power_near(pg_p, pg_pow, p_c)
+        if pw is None:
+            continue
+        ratio = pw / pow0
+        if ratio < settings.HARMONIC_MIN_POWER_RATIO:
+            continue
+        if _n_events(t, p_c, t0) < settings.HARMONIC_MIN_TRANSITS:
+            continue
+        _, depth_c, _ = _fold_snr(t, y, p_c, t0, duration)
+        if depth_c is None or depth_c <= 0:
+            continue
+        real_c = event_realization(t, y, p_c, t0, duration, depth_c)
+        conc_c = eclipse_concentration(t, y, p_c, t0, duration, depth_c)
+        diag["checked"].append({
+            "multiple": n, "period_days": float(p_c),
+            "power_ratio": round(ratio, 3),
+            "realization": _f(real_c),
+            "concentration": _f(conc_c),
+        })
+        if real_c is None:
+            continue
+        if real_c < 0.8:
+            continue                    # candidate must realize its own events
+        if real0 > 0.7:
+            continue                    # current period already consistent
+        if real_c - real0 < settings.HARMONIC_MIN_CONC_GAIN:
+            continue
+        if best is None or real_c > best[2]:
+            best = (n, p_c, real_c, depth_c)
+
+    if best is None:
+        diag["reason"] = "no multiple satisfied the evidence threshold"
+        return None, diag
+    n, p_c, real_c, depth_c = best
+    diag["switched_to_multiple"] = n
+    diag["realization_after"] = _f(real_c)
+    diag["depth_at_new_period_ppm"] = round(depth_c * 1e6, 1)
+    return float(p_c), diag
 
 
 def _power_with_gate_retry(model, gate: float, warnings: list[str],
@@ -274,6 +497,7 @@ def run_tls(time: np.ndarray, flux: np.ndarray,
         mask = _select_window(t, np.asarray(sector_ids), warnings)
         if not mask.all():
             t, y = t[mask], y[mask]
+    search_window = (float(t.min()), float(t.max()))
 
     # uniform decimation for very long light curves (documented, not silent) ---
     if len(t) > settings.TLS_MAX_POINTS:
@@ -374,6 +598,60 @@ def run_tls(time: np.ndarray, flux: np.ndarray,
                 "Only one transit event is covered by the observations; "
                 "period and duration are correspondingly less certain."
             )
+
+    # folded-curve duration (TLS duration grid runs systematically short) ----
+    duration_folded = None
+    if period and t0 and depth and depth > 1e-4 and period > 0:
+        duration_folded = _duration_from_fold(t, y, period, t0, depth)
+        if (duration_folded is not None and duration is not None
+                and duration_folded > 1.25 * duration):
+            warnings.append(
+                "Folded-curve T14 at half depth is "
+                f"{duration_folded * 24:.2f} h versus {duration * 24:.2f} h "
+                "from the TLS duration grid; the folded measurement is "
+                "reported as duration_folded_days."
+            )
+
+    # harmonic / alias disambiguation (evidence-based) -----------------------
+    harmonic_check = None
+    if significant:
+        new_period, hdiag = harmonic_scan(t, y, period, t0, duration, depth,
+                                          pg_p, pg_pow)
+        harmonic_check = hdiag
+        real0 = hdiag.get("realization_at_tls_period")
+        if (not hdiag.get("switched_to_multiple")
+                and isinstance(real0, (int, float)) and real0 < 0.3):
+            warnings.append(
+                "Period suspect: only "
+                f"{real0:.0%} of the epochs it predicts show any dip "
+                "(event realization) — a real transit train should "
+                "realize nearly all of them. The reported period is "
+                "likely an alias of the true one; the harmonic scan found "
+                "no multiple with enough periodogram support to replace "
+                "it, so treat the period (and planet radius) as unreliable."
+            )
+        if new_period and new_period != period:
+            old_period = period
+            period = new_period
+            s_new, d_new, _ = _fold_snr(t, y, period, t0, duration)
+            if d_new is not None and d_new > 0:
+                depth = d_new
+            if s_new is not None:
+                snr = s_new
+            n_transits = max(int(np.floor((t[-1] - t[0]) / period)) + 1, 1)
+            duration_folded = None
+            if depth and depth > 1e-4:
+                duration_folded = _duration_from_fold(t, y, period, t0, depth)
+            warnings.append(
+                f"Period multiplied by {hdiag.get('switched_to_multiple')}: "
+                f"{old_period:.5f} d -> {period:.5f} d. The TLS period left "
+                "most predicted transits unrealized (event realization "
+                f"{hdiag.get('realization_at_tls_period')}), while the longer "
+                f"period realizes {hdiag.get('realization_after')} of its "
+                "predicted epochs and the periodogram supports it; "
+                "light-curve evidence only."
+            )
+
     if not significant:
         warnings.append(
             "No periodic transit-like signal reached the significance "
@@ -390,6 +668,9 @@ def run_tls(time: np.ndarray, flux: np.ndarray,
         periodogram_power=pg_pow,
         version=_tls_version(tls),
         depth_gate_used=gate_used,
+        duration_folded=duration_folded,
+        harmonic_check=harmonic_check,
+        search_window_days=search_window,
         folded_phase=_arr(res, "folded_phase"),
         folded_flux=_arr(res, "folded_y"),
         model_phase=_arr(res, "model_folded_phase"),

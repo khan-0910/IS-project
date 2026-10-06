@@ -35,6 +35,71 @@ def fold_phase(t: np.ndarray, period: float, t0: float) -> np.ndarray:
     return ph
 
 
+def per_event_baseline(t: np.ndarray, y: np.ndarray, period: float, t0: float,
+                       duration: float, inner: float = 1.0,
+                       outer: float = 2.5) -> tuple[np.ndarray | None, dict]:
+    """Per-transit out-of-transit baseline factors (1.0 = no change).
+
+    One global baseline across many transits — possibly years apart and from
+    different sectors — lets slow residual systematics bias the fitted depth
+    (measured on WASP-18 b: a 6-sector fit returned ~1/3 of the photometric
+    depth).  Each event's baseline is the median of its ±[inner, outer]×
+    duration annulus; events with a baseline deviating >10% from unity are
+    left untouched (a detrending failure must stay visible, not be silently
+    rescaled).
+
+    Returns (factor_per_point_or_None, diagnostics).
+    """
+    diag: dict = {
+        "method": f"per-event out-of-transit median, ±[{inner:g},{outer:g}]×duration",
+        "applied": False,
+    }
+    if (period is None or t0 is None or duration is None
+            or not (period > 0 and duration > 0)):
+        diag["reason"] = "missing period/epoch/duration"
+        return None, diag
+    if 2 * outer * duration >= period:
+        diag["reason"] = ("baseline annulus would overlap adjacent events "
+                          "(period too short for the duration)")
+        return None, diag
+    t = np.asarray(t, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
+    good = np.isfinite(t) & np.isfinite(y)
+    t, y = t[good], y[good]
+    if t.size < 50:
+        diag["reason"] = "too few samples"
+        return None, diag
+    k0 = int(np.floor((t.min() - t0) / period)) - 1
+    k1 = int(np.ceil((t.max() - t0) / period)) + 1
+    events = t0 + np.arange(k0, k1 + 1) * period
+    idx = np.argmin(np.abs(t[:, None] - events[None, :]), axis=1)
+    factors = np.ones_like(y)
+    used = 0
+    n_evaluated = 0
+    for j in range(events.size):
+        m_ev = idx == j
+        if not m_ev.any():
+            continue
+        dt = np.abs(t[m_ev] - events[j])
+        ring = (dt >= inner * duration) & (dt <= outer * duration)
+        if int(ring.sum()) < 10:
+            continue
+        n_evaluated += 1
+        b = float(np.median(y[m_ev][ring]))
+        if not np.isfinite(b) or abs(b - 1.0) > 0.1:
+            continue
+        factors[m_ev] = b
+        used += 1
+    if used < 2:
+        diag["reason"] = ("fewer than 2 events had a usable out-of-transit "
+                          "annulus")
+        return None, diag
+    diag["applied"] = True
+    diag["n_events"] = int(n_evaluated)
+    diag["n_events_normalized"] = int(used)
+    return factors, diag
+
+
 def fit_transit(t: np.ndarray, y: np.ndarray, yerr: np.ndarray | None,
                 period: float, t0: float, duration_days: float,
                 n_walkers: int | None = None, n_steps: int | None = None,
@@ -58,6 +123,21 @@ def fit_transit(t: np.ndarray, y: np.ndarray, yerr: np.ndarray | None,
 
     t = np.asarray(t, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
+    if yerr is not None:
+        yerr_arr = np.asarray(yerr, dtype=np.float64)
+        yerr_arr = np.where(np.isfinite(yerr_arr) & (yerr_arr > 0), yerr_arr,
+                            max(np.nanstd(y), 1e-6))
+    else:
+        yerr_arr = None
+
+    # per-event baseline normalization BEFORE window selection (the annulus
+    # reaches beyond the fit window, so it needs the full light curve)
+    factors, norm_diag = per_event_baseline(t, y, period, t0, duration_days)
+    if factors is not None:
+        y = y / factors
+        if yerr_arr is not None:
+            yerr_arr = yerr_arr / factors
+
     ph = fold_phase(t, period, t0)
     half = 1.5 * max(duration_days, 1e-4)
     sel = np.abs(ph) <= half
@@ -65,13 +145,22 @@ def fit_transit(t: np.ndarray, y: np.ndarray, yerr: np.ndarray | None,
         return {"status": "insufficient_data", "n_points": int(sel.sum())}
 
     tw, yw = t[sel], y[sel]
-    pw = fold_phase(tw, period, t0) + t0          # absolute time near t0
-    if yerr is not None:
-        yerr_w = np.asarray(yerr, dtype=np.float64)[sel]
+    if yerr_arr is not None:
+        yerr_w = yerr_arr[sel]
         yerr_w = np.where(np.isfinite(yerr_w) & (yerr_w > 0), yerr_w,
                           max(np.nanstd(yw), 1e-6))
     else:
         yerr_w = np.full_like(yw, max(np.nanstd(yw), 1e-6))
+
+    # decimate very dense windows (documented): batman cost scales with
+    # n_points x walkers x steps and thousands of points add no information
+    # beyond independent noise
+    n_before = int(tw.size)
+    decimated = False
+    if n_before > settings.MCMC_MAX_POINTS:
+        stride = int(np.ceil(n_before / settings.MCMC_MAX_POINTS))
+        tw, yw, yerr_w = tw[::stride], yw[::stride], yerr_w[::stride]
+        decimated = True
 
     base = np.median(yw[np.abs(fold_phase(tw, period, t0)) > duration_days])
     depth0 = max(base - np.min(yw), 1e-5)
@@ -150,6 +239,11 @@ def fit_transit(t: np.ndarray, y: np.ndarray, yerr: np.ndarray | None,
         "model": "batman quadratic-limb-darkened transit, emcee affine-"
                  "invariant MCMC (period fixed to TLS value)",
         "n_points": int(len(tw)),
+        "per_event_baseline": norm_diag,
+        **({"n_points_before_decimation": n_before,
+            "note": "fitted window decimated to MCMC_MAX_POINTS for "
+                    " tractable sampling; statistics unaffected beyond "
+                    "noise averaging"} if decimated else {}),
         "n_steps": n_steps, "n_walkers": n_walkers, "burn": burn,
         "acceptance_fraction": round(accept, 3),
         "period_fixed_days": float(period),

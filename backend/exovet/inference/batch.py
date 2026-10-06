@@ -24,6 +24,7 @@ from pathlib import Path
 
 from exovet.config import settings
 from exovet.eval.verify import load_ground_truth
+from exovet.utils.jsonio import finite_json, read_json
 
 MAX_BATCH = 2000
 
@@ -130,7 +131,7 @@ def run_batch(tic_ids: list[int], result_path: Path,
             sources.append(Path(extra))
     for src in sources:
         try:
-            prev = json.loads(src.read_text(encoding="utf-8"))
+            prev = read_json(src)
             for r in prev.get("records", []):
                 if r.get("status") == "ok":
                     done.setdefault(int(r["target_id"]), r)
@@ -142,7 +143,7 @@ def run_batch(tic_ids: list[int], result_path: Path,
 
     def save() -> None:
         tmp = result_path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(doc, indent=1), encoding="utf-8")
+        tmp.write_text(json.dumps(finite_json(doc), indent=1), encoding="utf-8")
         tmp.replace(result_path)
 
     todo = [t for t in tic_ids

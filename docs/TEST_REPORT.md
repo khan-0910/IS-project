@@ -77,7 +77,7 @@ The frontend compared `run_mode === "QUICK"` but the backend stores the legacy v
 
 ## 8. Remaining bottlenecks (measured)
 
-1. **MCMC transit fit, FULL mode: 235.8 s** on a 6-sector target (was 46.7 s on 2 sectors) — cost scales with data volume; the clear next optimization target.
+1. **MCMC transit fit, FULL mode: 235.8 s** on a 6-sector target (was 46.7 s on 2 sectors) — cost scales with data volume; the clear next optimization target. *(fixed 2026-10-06 — see §10)*
 2. **TLS: 34 s** on 101 k points (10 s on the smaller demo target) — numba search, inherent.
 3. **First-ever MAST download: ~291 s** for a multi-sector target — network-bound, one-time per target (bundle cache makes every later operation 0.0 s).
 4. Scientific: PC recall 0 % and 64 % ambiguity in the pilot remain visible in VERIFY/ABOUT; the WASP-18 EB/GEB near-tie illustrates the documented PC/EB weakness on real data.
@@ -87,3 +87,48 @@ The frontend compared `run_mode === "QUICK"` but the backend stores the legacy v
 - `a2e4da9` — staged progress, analysis caching, instrument-style UX (21 files, +3899/−434)
 - `be9cbed` — cache-key fix + regression tests + quick-mode badge fix
 - Runtime artifacts (`data/results/`, `data/processed/`) gitignored; demo data stays local.
+
+## 10. Accuracy upgrades — measured (2026-10-06)
+
+Four anomalies from the pilot / WASP-18 run, root-caused and fixed. New suite: **53 tests passing** (36 pre-existing + 17 new). `CACHE_SCHEMA` bumped 2→5 so older cached reports can never be silently reused.
+
+### 10.1 Transit-fit depth bias on multi-sector targets (the big one)
+
+Symptom: MCMC fit depth **3,257 ppm** vs TLS photometric depth 11,203 ppm (job `e49a47fa4b68`). The first hypothesis (one global baseline across sectors) was implemented and tested — secondary. The real cause: the fit consumed the full 6-sector / 2,578-day baseline while the period stayed fixed at the TLS value; TLS-level period accuracy (1.5×10⁻⁴ d here) drifts transit phase by ~0.42 d across that baseline, so by mid-baseline predicted epochs miss the transits — measured empirical depth in the old fitted window: **220 ppm**.
+
+Fix: `run_tls` now records `search_window_days` (the exact span searched — 51 d for WASP-18, sector-cap warning kept) and the pipeline restricts the fit to it (`window_note` in the report).
+
+| metric | before `e49a47fa4b68` | after `7187a1a13c44` |
+|---|---|---|
+| fit depth | 3,257 ppm | **9,945 ppm** |
+| Rp/Rs | 0.0571 | **0.0997 (+0.0008/−0.0031)** — literature ≈ 0.0965, within 1σ |
+| reduced χ² | 41.9 | **2.45** |
+| residual scatter | 3,486 ppm | **842 ppm** |
+| fitted points | 18,642 (2,578-d span) | 3,675 (51-d window, decimated from 7,349) |
+| transit_fit time | 235.8 s | **49.6 s** (99.1 s wall incl. TLS 47.8 s) |
+
+Depths now agree: TLS 11,203 ppm · fit 9,945 ppm · implied from published radii ~8,900–9,300 ppm.
+
+### 10.2 Per-event baseline normalization
+
+Each transit's out-of-transit level (median of its ±[1, 2.5]×duration annulus) is divided out before the MCMC. Events with a >10 % baseline deviation are *skipped, not rescaled* (a detrending failure must stay visible); refuses when the annulus would overlap adjacent events or when <2 events are usable. Diagnostics in every fit report (`per_event_baseline`, 45/45 events on WASP-18).
+
+### 10.3 TLS harmonic / alias lock-ons
+
+Pilot: 4/25 targets reported period errors 7–90 % at (near-)integer sub-multiples of the true period. New `harmonic_scan` switches P* → N·P* only on light-curve evidence, never catalogs: periodogram peak at N·P* ≥ 0.5× the peak at P* · ≥ 3 events in span · **event realization** ≤ 0.7 at P* while ≥ 0.8 at N·P* with a clear gain. Realization = fraction of predicted epochs with an observed dip — the vetting-standard discriminator (fold-concentration cannot separate exact sub-multiples, where every fold aligns at phase 0). When no switch qualifies but realization < 0.3, a **"period suspect"** warning is emitted.
+
+Real-data checks: WASP-18 b realization 0.818 → no switch, no warning (correct). TIC 16920150 (pilot alias 0.933 d vs true ≈ 9.156 d): realization **0.0** at the alias → period-suspect warning now displayed; no switch because no multiple reaches the power gate (honestly reported rather than guessed).
+
+### 10.4 Short TLS durations
+
+T14 is additionally measured from the folded curve at half depth (`duration_folded_days`, primary side, ≥5 points) with a warning when > 1.25× the TLS grid value; the larger of the two sets the fit window (WASP-18: 1.89 h folded vs 1.63 h grid). Folded T14 also flags aliases: 4.98 h vs 0.54 h on TIC 16920150.
+
+### 10.5 Robustness fixes found on the way
+
+- NaN/Infinity in stored reports (legitimate for undefined statistics, e.g. FAP of non-significant runs) made `GET /api/jobs/{id}` return **500** (Starlette forbids NaN in JSON). Reports are now sanitized at write and read (`backend/exovet/utils/jsonio.py`), regression-tested.
+- `t0 = 0.0` was rejected as "missing" by truthiness guards in `harmonic_scan` / `event_realization` / `per_event_baseline`.
+- `per_event_baseline` diagnostics counted phantom epochs outside the data span as `n_events`.
+
+### 10.6 New tests (17)
+
+`backend/tests/test_accuracy_upgrades.py`: alias recovery through `harmonic_scan` on synthetic curves (incl. the trap where the 2× alias has *more* periodogram power than the true multiple), no-switch at the true period, disabled scan, periodogram-gate rejection; `event_realization` ≈ 1/N at an alias; folded-duration measurement + impossible-dip rejection; per-event baseline correction, failed-detrending skip, annulus-overlap and single-event refusals; end-to-end fit on a drifting-baseline synthetic (normalization + decimation + depth recovery); `search_window_days` recording and multi-sector cap; JSON NaN sanitation (write/read).
