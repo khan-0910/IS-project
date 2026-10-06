@@ -21,10 +21,65 @@ import threading
 import numpy as np
 
 from exovet.config import settings
+from exovet.inference.progress import StageTracker
+from exovet.inference.analysis_cache import (analysis_cache_key,
+                                             load_cached_analysis,
+                                             store_cached_analysis)
 from exovet.utils.errors import ExoVetError
 
 _MODEL_LOCK = threading.Lock()
 _MODEL_CACHE: dict = {}
+
+# Fingerprint of every tunable that changes a result — cache keys and the
+# report's versions block both embed this, so a configuration change
+# invalidates cached analyses automatically.
+_PIPELINE_CONFIG_KEYS = (
+    "FETCH_MAX_SECTORS", "QUALITY_BITMASK", "CLIP_HIGH_SIGMA",
+    "DETREND_METHOD", "DETREND_WINDOW_DAYS", "DETREND_EDGEBUFFER_DAYS",
+    "TLS_PERIOD_MIN", "TLS_PERIOD_MAX", "TLS_TRANSIT_DEPTH_MIN",
+    "TLS_OVERSAMPLING", "TLS_MAX_POINTS", "TLS_MAX_SPAN_DAYS",
+    "GLOBAL_POINTS", "LOCAL_WINDOW_POINTS", "PHASE_POINTS",
+    "MC_DROPOUT_PASSES", "MCMC_STEPS", "MCMC_WALKERS",
+)
+
+
+def config_fingerprint() -> str:
+    import hashlib
+    import json as _json
+    blob = _json.dumps({k: getattr(settings, k) for k in _PIPELINE_CONFIG_KEYS},
+                       sort_keys=True)
+    return hashlib.sha1(blob.encode()).hexdigest()[:10]
+
+
+def versions_block(mode: str) -> dict:
+    """Model / pipeline / data versions for reproducibility."""
+    from exovet import __version__
+    ckpt = settings.MODEL_DIR / "exovet_transformer.pt"
+    model_version = "untrained"
+    if ckpt.exists():
+        import torch
+        try:
+            payload = torch.load(ckpt, map_location="cpu", weights_only=False)
+            trained_at = payload.get("trained_at")
+            f1 = (payload.get("metrics") or {}).get("test", {}).get("macro_f1")
+            model_version = (f"{ckpt.stem}-" + str(trained_at or "")[:10]
+                             + (f"-f1{f1:.3f}" if f1 is not None else ""))
+        except Exception:                         # noqa: BLE001
+            model_version = ckpt.stem
+    gt_csv = settings.DATASET_DIR / "targets_labeled.csv"
+    return {
+        "pipeline": f"exovet {__version__}",
+        "pipeline_config_sha": config_fingerprint(),
+        "pipeline_config_date": time.strftime("%Y-%m-%d", time.gmtime()),
+        "model": model_version,
+        "data": {
+            "source": "MAST (TESS) via lightkurve",
+            "ground_truth": ("exofop targets_labeled.csv "
+                             f"({time.strftime('%Y-%m-%d', time.gmtime(gt_csv.stat().st_mtime))}"
+                             ")" if gt_csv.exists() else "exofop targets_labeled.csv"),
+        },
+        "analysis_mode": "quick" if mode in ("fast", "quick") else "full",
+    }
 
 
 def get_model():
@@ -38,8 +93,18 @@ def get_model():
         return _MODEL_CACHE["model"], _MODEL_CACHE["payload"]
 
 
-def analyze_lightcurve(bundle, stellar: dict | None = None) -> dict:
-    """Run the full vetting stack on an ingested LightCurveBundle."""
+def analyze_lightcurve(bundle, stellar: dict | None = None,
+                       include_fit: bool = True,
+                       include_attention: bool = True,
+                       include_series: bool = True,
+                       tracker: StageTracker | None = None) -> dict:
+    """Run the vetting stack on an ingested LightCurveBundle.
+
+    The optional ``include_*`` switches let batch verification runs skip the
+    expensive interpretability/MCMC/chart stages; every skipped section is
+    recorded as "skipped" so the report never silently diverges from the
+    full pipeline.
+    """
     from exovet.detection.tls_search import run_tls
     from exovet.features.engineering import (extract_features,
                                              feature_registry_json)
@@ -49,10 +114,13 @@ def analyze_lightcurve(bundle, stellar: dict | None = None) -> dict:
     from exovet.uncertainty.mc_dropout import mc_predict
 
     t_start = time.time()
+    tr = tracker or StageTracker()
     report: dict = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "target_id": bundle.target_id,
+        "versions": versions_block("full" if include_fit else "fast"),
+        "cached": False,
     }
 
     # 1. ingestion provenance
@@ -66,8 +134,10 @@ def analyze_lightcurve(bundle, stellar: dict | None = None) -> dict:
     }
 
     # 2. preprocessing
+    tr.begin("preprocessing")
     t0 = time.time()
     clean = preprocess(bundle)
+    tr.end("preprocessing")
     report["preprocessing"] = {
         "module": "exovet.preprocessing.clean",
         "method": f"wotan {settings.DETREND_METHOD}, window="
@@ -79,22 +149,27 @@ def analyze_lightcurve(bundle, stellar: dict | None = None) -> dict:
         "seconds": round(time.time() - t0, 2),
     }
     if len(clean.time) < settings.MIN_POINTS:
+        tr.fail(f"only {len(clean.time)} usable points")
         return {"status": "error",
                 "error": f"only {len(clean.time)} usable points "
                          f"(minimum {settings.MIN_POINTS})"}
 
     # 3. TLS detection
+    tr.begin("tls")
     t0 = time.time()
     det = run_tls(clean.time, clean.detrended, clean.flux_err,
                   sector_ids=clean.sector_ids)
+    tr.end("tls")
     report["detection"] = {"module": "exovet.detection.tls_search",
                            "seconds": round(time.time() - t0, 2),
                            **det.summary()}
 
     # 4. features
+    tr.begin("feature_extraction")
     t0 = time.time()
     scalars, views = extract_features(clean, det, stellar or {})
     feat_warnings = views.pop("_meta", {}).get("warnings", [])
+    tr.end("feature_extraction")
     report["features"] = {
         "module": "exovet.features.engineering",
         "scalars": scalars,
@@ -103,13 +178,17 @@ def analyze_lightcurve(bundle, stellar: dict | None = None) -> dict:
     }
 
     # 5-6. classifier + MC-Dropout
+    tr.begin("classification")
+    tr.begin("uncertainty")   # MC passes are inside the same measured block
     t0 = time.time()
     model, payload = get_model()
     vec = np.array([scalars.get(n, float("nan"))
                     for n in payload["feature_names"]], dtype=np.float32)
     mc = mc_predict(model, views["global"], views["local"], views["phase"],
                     vec, scaler=payload["scaler"])
-    mc["seconds"] = round(time.time() - t0, 2)
+    tr.end("classification")
+    tr.end("uncertainty")   # MC passes are inside the same measured block
+    mc["seconds"] = round(time.time() - t0, 2)  # combined classify+MC timing
     mc["model_checkpoint"] = {
         "trained_at": payload.get("trained_at"),
         "test_macro_f1": payload["metrics"].get("test_macro_f1"),
@@ -118,24 +197,37 @@ def analyze_lightcurve(bundle, stellar: dict | None = None) -> dict:
     report["classification"] = mc
 
     # 7. attention
-    try:
-        attn = attention_report(model, views["global"], views["local"],
-                                views["phase"], vec,
-                                scaler=payload["scaler"])
-        report["attention"] = attn
-    except Exception as exc:                      # noqa: BLE001
-        report["attention"] = {"status": "unavailable",
-                               "error": f"{type(exc).__name__}: {exc}"}
+    if include_attention:
+        tr.begin("explainability")
+        try:
+            attn = attention_report(model, views["global"], views["local"],
+                                    views["phase"], vec,
+                                    scaler=payload["scaler"])
+            tr.end("explainability")
+            report["attention"] = attn
+        except Exception as exc:                  # noqa: BLE001
+            tr.end("explainability", ok=False)
+            report["attention"] = {"status": "unavailable",
+                                   "error": f"{type(exc).__name__}: {exc}"}
+    else:
+        report["attention"] = {"status": "skipped",
+                               "reason": "disabled for this run"}
 
     # 8. physical transit fit (only when TLS found a signal)
     fit_result = None
-    if det.period and det.t0 and det.duration:
+    if not include_fit:
+        report["transit_fit"] = {"status": "skipped",
+                                 "reason": "quick analysis — full analysis adds MCMC"}
+    elif det.period and det.t0 and det.duration:
+        tr.begin("transit_fit")
         try:
             fit_result = fit_transit(clean.time, clean.detrended,
                                      clean.flux_err, det.period, det.t0,
                                      det.duration)
+            tr.end("transit_fit")
             report["transit_fit"] = fit_result
         except Exception as exc:                  # noqa: BLE001
+            tr.end("transit_fit", ok=False)
             report["transit_fit"] = {"status": "failed",
                                      "error": f"{type(exc).__name__}: {exc}"}
     else:
@@ -143,30 +235,71 @@ def analyze_lightcurve(bundle, stellar: dict | None = None) -> dict:
                                  "reason": "no significant TLS detection"}
 
     # 9. chart series (projections of the computed products)
-    try:
-        from exovet.inference.series import build_series
-        report["series"] = build_series(clean, det, fit_result)
-    except Exception as exc:                      # noqa: BLE001
-        report["series"] = {"status": "unavailable",
-                            "error": f"{type(exc).__name__}: {exc}"}
+    if include_series:
+        tr.begin("finalizing")
+        try:
+            from exovet.inference.series import build_series
+            report["series"] = build_series(clean, det, fit_result)
+        except Exception as exc:                  # noqa: BLE001
+            report["series"] = {"status": "unavailable",
+                                "error": f"{type(exc).__name__}: {exc}"}
+        tr.end("finalizing")
 
     report["feature_registry"] = feature_registry_json()
     report["total_seconds"] = round(time.time() - t_start, 2)
+    tr.merge_into(report)
     report["status"] = "ok"
     return report
 
 
-def analyze_tic(tic_id: int) -> dict:
-    """Full report for a TIC target (live MAST data with caching)."""
+def analyze_tic(tic_id: int, fast: bool = False,
+                tracker: StageTracker | None = None,
+                force_refresh: bool = False) -> dict:
+    """Full report for a TIC target (live MAST data with caching).
+
+    ``fast=True`` is the QUICK analysis: the identical ingest→classify stack
+    without attention rollout, batman+emcee MCMC or chart series.  Completed
+    analyses are cached on disk keyed by target + pipeline config + mode +
+    model version, so re-running the same target is instant; ``force_refresh``
+    bypasses the cache (the bundle download cache is separate and always on).
+    """
     from exovet.data.ingest import (fetch_stellar_metadata,
                                     fetch_tess_lightcurve)
+    tr = tracker or StageTracker()
+
+    mode = "quick" if fast else "full"
+    cache_key = analysis_cache_key(tic_id, mode)
+    if not force_refresh:
+        cached = load_cached_analysis(cache_key)
+        if cached is not None:
+            cached["cached"] = True
+            return cached
+
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutTimeout
+    tr.begin("fetching_data")
     bundle = fetch_tess_lightcurve(tic_id)
     try:
-        stellar = fetch_stellar_metadata(tic_id)
+        # catalog metadata is contextual only; bound it so a slow MAST
+        # catalog query can never dominate the analysis wall-clock
+        with ThreadPoolExecutor(1) as _ex:
+            _fut = _ex.submit(fetch_stellar_metadata, tic_id)
+            try:
+                stellar = _fut.result(timeout=20)
+            except _FutTimeout:
+                _fut.cancel()
+                stellar = {"_error": "TIC catalog query timed out (non-blocking)"}
     except ExoVetError:
         stellar = {}
-    report = analyze_lightcurve(bundle, stellar=stellar)
+    tr.end("fetching_data")
+    report = analyze_lightcurve(bundle, stellar=stellar,
+                                include_fit=not fast,
+                                include_attention=not fast,
+                                include_series=True,  # charts stay cheap; batch strips them
+                                tracker=tr)
     report["stellar"] = stellar
+    report["run_mode"] = "fast" if fast else "full"
+    report["versions"]["analysis_mode"] = mode
+    store_cached_analysis(cache_key, report)
     return report
 
 

@@ -152,6 +152,13 @@ export interface Report {
   status: string;
   target_id: string;
   generated_at: string;
+  schema_version?: string;
+  cached?: boolean;
+  cache_key?: string;
+  cache_saved_at?: string;
+  versions?: Versions;
+  run_mode?: string;
+  progress?: { stages: StageEvent[]; stage_seconds: Record<string, number>; total_seconds?: number };
   ingest?: Ingest;
   preprocessing?: Record<string, unknown>;
   detection?: Detection;
@@ -163,6 +170,77 @@ export interface Report {
   stellar?: Record<string, unknown>;
   total_seconds?: number;
   error?: string;
+}
+
+export interface Versions {
+  pipeline?: string;
+  pipeline_config_sha?: string;
+  pipeline_config_date?: string;
+  model?: string;
+  data?: { source?: string; ground_truth?: string };
+  analysis_mode?: string;
+}
+
+export interface StageEvent {
+  stage: string;
+  status: "running" | "done" | "failed";
+  seconds?: number | null;
+  message?: string;
+}
+
+/** GET /api/jobs/{id}?brief=1 — light polling payload. */
+export interface JobBrief {
+  job_id?: string | null;
+  status: "queued" | "running" | "done" | "error";
+  mode?: string;
+  stage?: string;
+  message?: string;
+  elapsed_seconds?: number;
+  stages?: StageEvent[];
+  stage_seconds?: Record<string, number>;
+  error?: string;
+  error_info?: FriendlyError;
+  summary?: Headline;
+  cached?: boolean;
+  versions?: Versions;
+}
+
+export interface FriendlyError {
+  code: string;
+  message: string;
+  detail?: string | null;
+  action: string;
+}
+
+export interface Headline {
+  target_id?: string;
+  predicted_class?: string | null;
+  top_prob?: number | null;
+  verdict?: string | null;
+  ambiguous?: boolean | null;
+  period_days?: number | null;
+  sde?: number | null;
+  snr?: number | null;
+  depth_ppm?: number | null;
+  n_sectors?: number | null;
+  total_seconds?: number | null;
+  run_mode?: string;
+}
+
+export interface ResultRow {
+  job_id: string;
+  target_id?: string;
+  generated_at?: string;
+  mode?: string;
+  status?: string;
+  predicted_class?: string | null;
+  confidence?: number | null;
+  verdict?: string | null;
+  cached?: boolean;
+  period_days?: number | null;
+  sde?: number | null;
+  n_sectors?: number | null;
+  total_seconds?: number | null;
 }
 
 export interface Job {

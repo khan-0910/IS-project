@@ -1,6 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+
+const NAV = [
+  { href: "/", label: "HOME" },
+  { href: "/analyze", label: "ANALYZE" },
+  { href: "/results", label: "RESULTS" },
+  { href: "/verify", label: "VERIFY" },
+  { href: "/about", label: "ABOUT" },
+];
 
 export default function TopBar({
   meta,
@@ -10,6 +20,7 @@ export default function TopBar({
   status?: "ONLINE" | "RUNNING" | "IDLE";
 }) {
   const [utc, setUtc] = useState("--:--:--");
+  const pathname = usePathname() ?? "/";
   useEffect(() => {
     const tick = () =>
       setUtc(
@@ -23,11 +34,24 @@ export default function TopBar({
   const st = status ?? "ONLINE";
   return (
     <div className="topbar">
-      <a href="/" className="wordmark">
+      <Link href="/" className="wordmark">
         EXO<span>VET</span>
-      </a>
+      </Link>
       <div className="sep" />
       <span className="label m">EXOPLANET VETTING INSTRUMENT · TESS</span>
+      <div className="sep" />
+      <nav className="mainnav" aria-label="Primary">
+        {NAV.map((n) => (
+          <Link
+            key={n.href}
+            href={n.href}
+            className={`navlink${pathname === n.href ? " active" : ""}`}
+            aria-current={pathname === n.href ? "page" : undefined}
+          >
+            {n.label}
+          </Link>
+        ))}
+      </nav>
       <div className="topmeta">
         {meta?.map((m) => (
           <span key={m.k}>

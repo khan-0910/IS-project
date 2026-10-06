@@ -226,18 +226,28 @@ def fetch_tess_lightcurve(raw_tic: str | int,
             "identifier may be wrong."
         )
 
-    try:
-        lcc = sr.download_all()
-    except Exception as exc:
+    # Download product-by-product instead of download_all(): one corrupt or
+    # interrupted HLSP file (lightkurve caches it) would otherwise fail the
+    # whole target on every retry. Skip bad products, fail only if none work.
+    lcc_list = []
+    dl_errors: list[str] = []
+    table = sr.table
+    authors = list(table["author"]) if "author" in table.colnames else ["?"] * len(sr)
+    for i in range(len(sr)):
+        try:
+            lcc_list.append(sr[i].download())
+        except Exception as exc:  # corrupt cached file, transient MAST hiccup, ...
+            dl_errors.append(f"{authors[i]} #{i}: {type(exc).__name__}: {str(exc)[:160]}")
+    if not lcc_list:
         raise DownloadError(
             f"Failed to download TESS light curves for TIC {tic_id} from MAST.",
-            detail=f"{type(exc).__name__}: {exc}",
-        ) from exc
+            detail="; ".join(dl_errors[-3:]),
+        )
 
     want = set(int(s) for s in sectors) if sectors else None
     curves: list[SectorCurve] = []
     urls: list[str] = []
-    for lc in lcc:
+    for lc in lcc_list:
         meta = dict(getattr(lc, "meta", {}) or {})
         sector = meta.get("SECTOR")
         try:

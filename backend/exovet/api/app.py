@@ -10,6 +10,12 @@ GET  /api/features                           → 33-feature registry (units, sou
 GET  /api/classes                            → the five vetting classes
 GET  /api/health                             → liveness + component versions
 
+Batch verification (exovet.inference.batch + exovet.eval.verify)
+POST /api/verify/parse-csv   multipart ExoFOP CSV → {tic_ids} (TIC ID column)
+POST /api/verify/batch       {tic_ids, workers, include_fit} → verify job id
+GET  /api/verify/batch/{id}  → progress; when done: per-target records +
+                             error % / confusion matrix / mismatch reasons
+
 Long analyses run on a worker thread; results are persisted under
 data/results/{job_id}.json so every delivered report is the exact file the
 backend produced (traceability requirement).
@@ -24,17 +30,22 @@ import time
 import uuid
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from exovet.config import settings
+from exovet.inference.batch import MAX_BATCH, default_result_path
+from exovet.inference.progress import StageTracker
+from exovet.utils.errors import ExoVetError
 
 app = FastAPI(title="EXOVET", version="0.1.0",
               description="AI-enabled exoplanet vetting — every number "
                           "traceable to data, code and configuration.")
 app.add_middleware(
-    CORSMiddleware, allow_origins=["http://localhost:3000"],
+    CORSMiddleware,
+    allow_origin_regex=r"^http://localhost:\d+$",  # any local dev port (3000, 3001, ...)
     allow_methods=["*"], allow_headers=["*"],
 )
 
@@ -43,17 +54,57 @@ _JOB_LOCK = threading.Lock()
 MAX_UPLOAD_MB = 50
 
 
+@app.on_event("startup")
+def _warmup() -> None:
+    """Compile numba/TLS + load the model once, off the request path."""
+    def _go() -> None:
+        from exovet.inference.analysis_cache import warmup
+        try:
+            app.state.warmup = warmup()
+        except Exception as exc:                  # noqa: BLE001
+            app.state.warmup = {"error": str(exc)[:120]}
+    threading.Thread(target=_go, daemon=True).start()
+
+
 class AnalyzeRequest(BaseModel):
     tic_id: int
+    mode: str = "full"          # "quick" (screening) or "full" (MCMC etc.)
 
 
-def _run_job(job_id: str, fn, *args) -> None:
+def _friendly_error(exc: Exception) -> dict:
+    """Map exceptions to the (what/why/action) shape the UI shows humans."""
+    if isinstance(exc, ExoVetError):
+        actions = {
+            "invalid_input": "Check the TIC id (digits only) and try again.",
+            "no_tess_data": "Try another TIC id, or upload a light-curve file.",
+            "download_failed": "Check the internet connection, then retry — "
+                               "MAST is reached over the network.",
+            "insufficient_data": "Try another target with more observations.",
+            "upload_unsupported": "Upload a CSV/TSV with time+flux columns or "
+                                  "a FITS light curve.",
+        }
+        return {"code": exc.code, "message": exc.message,
+                "detail": exc.detail,
+                "action": actions.get(exc.code, "Retry the analysis.")}
+    return {"code": "internal_error",
+            "message": "The analysis hit an unexpected problem.",
+            "detail": f"{type(exc).__name__}: {exc}"[:300],
+            "action": "Retry; if it repeats, try a different target."}
+
+
+def _run_job(job_id: str, fn, *args, tracker: StageTracker | None = None) -> None:
+    import inspect
+    tr = tracker or StageTracker()
     with _JOB_LOCK:
         JOBS[job_id]["status"] = "running"
         JOBS[job_id]["started_at"] = time.strftime(
             "%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        JOBS[job_id]["tracker"] = tr
     try:
-        report = fn(*args)
+        if "tracker" in inspect.signature(fn).parameters:
+            report = fn(*args, tracker=tr)
+        else:
+            report = fn(*args)
         out = settings.RESULT_DIR / f"{job_id}.json"
         out.write_text(json.dumps(report, indent=1), encoding="utf-8")
         with _JOB_LOCK:
@@ -62,22 +113,34 @@ def _run_job(job_id: str, fn, *args) -> None:
             JOBS[job_id]["report_path"] = str(out)
             JOBS[job_id]["finished_at"] = time.strftime(
                 "%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            if report.get("status") != "ok":
+                JOBS[job_id]["error_info"] = _friendly_error(
+                    Exception(report.get("error", "pipeline error")))
+            else:
+                JOBS[job_id]["mode"] = report.get("run_mode", "full")
     except Exception as exc:                          # noqa: BLE001
+        tr.fail(f"{type(exc).__name__}: {exc}"[:200])
         with _JOB_LOCK:
             JOBS[job_id]["status"] = "error"
-            JOBS[job_id]["error"] = f"{type(exc).__name__}: {exc}"
+            JOBS[job_id]["error"] = f"{type(exc).__name__}: {exc}"[:400]
+            JOBS[job_id]["error_info"] = _friendly_error(exc)
             JOBS[job_id]["finished_at"] = time.strftime(
                 "%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def _submit(fn, *args) -> str:
+def _submit(fn, *args, mode: str | None = None) -> str:
     job_id = uuid.uuid4().hex[:12]
+    tr = StageTracker()
+    tr.begin("queued")
+    tr.end("queued")
     with _JOB_LOCK:
         JOBS[job_id] = {"status": "queued",
+                        "mode": mode or "full",
                         "created_at": time.strftime(
-                            "%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+                            "%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                        "tracker": tr}
     threading.Thread(target=_run_job, args=(job_id, fn, *args),
-                     daemon=True).start()
+                     kwargs={"tracker": tr}, daemon=True).start()
     return job_id
 
 
@@ -94,15 +157,22 @@ def health():
             comps[mod] = f"unavailable: {type(exc).__name__}"
     ckpt = settings.MODEL_DIR / "exovet_transformer.pt"
     comps["model_checkpoint"] = "present" if ckpt.exists() else "missing"
-    return {"version": __version__, "mode": settings.MODE, "components": comps}
+    out = {"version": __version__, "mode": settings.MODE, "components": comps}
+    warm = getattr(app.state, "warmup", None)
+    if warm is not None:
+        out["warmup"] = warm
+    return out
 
 
 @app.post("/api/analyze")
 def analyze(req: AnalyzeRequest):
     if req.tic_id <= 0 or req.tic_id > 10**12:
         raise HTTPException(400, "tic_id must be a positive TIC identifier")
+    mode = "quick" if str(req.mode).lower() in ("quick", "fast") else "full"
     from exovet.inference.pipeline import analyze_tic
-    return {"job_id": _submit(analyze_tic, req.tic_id), "status": "queued"}
+    return {"job_id": _submit(analyze_tic, req.tic_id, mode == "quick",
+                              mode=mode),
+            "status": "queued", "mode": mode}
 
 
 @app.post("/api/upload")
@@ -118,12 +188,13 @@ async def upload(file: UploadFile = File(...)):
         dest.unlink(missing_ok=True)
         raise HTTPException(400, f"file exceeds {MAX_UPLOAD_MB} MB")
     from exovet.inference.pipeline import analyze_uploaded
-    return {"job_id": _submit(analyze_uploaded, dest), "status": "queued",
+    return {"job_id": _submit(analyze_uploaded, dest, mode="full"),
+            "status": "queued",
             "filename": file.filename}
 
 
 @app.get("/api/jobs/{job_id}")
-def job_status(job_id: str):
+def job_status(job_id: str, brief: int = Query(0)):
     with _JOB_LOCK:
         job = JOBS.get(job_id)
     if job is None:
@@ -131,17 +202,105 @@ def job_status(job_id: str):
         path = settings.RESULT_DIR / f"{job_id}.json"
         if path.exists() and all(c in "0123456789abcdef" for c in job_id):
             report = json.loads(path.read_text(encoding="utf-8"))
+            if brief:
+                return _brief_from_report(job_id, report)
             return {"status": "done", "report_path": str(path),
                     "report": report,
                     "created_at": time.strftime(
                         "%Y-%m-%dT%H:%M:%SZ", time.gmtime(
                             path.stat().st_mtime))}
         raise HTTPException(404, "unknown job id")
+    if brief:
+        out = _brief(job)
+        out["job_id"] = job_id
+        return out
     out = dict(job)
+    out.pop("tracker", None)
     if job.get("report_path"):
         out["report"] = json.loads(Path(job["report_path"]).read_text(
             encoding="utf-8"))
     return out
+
+
+def _brief(job: dict) -> dict:
+    """Compact polling payload: stage + elapsed + light result summary.
+
+    Never includes the full report — the frontend polls this every 2 s and
+    only fetches the heavy document when the job is done.
+    """
+    tr: StageTracker | None = job.get("tracker")
+    out: dict = {"job_id": None, "status": job["status"],
+                 "mode": job.get("mode", "full")}
+    if tr is not None:
+        out.update(tr.snapshot())
+        # the job lifecycle is authoritative — the tracker only supplies the
+        # stage view (its own 'status' means the *stage* state, not the job's)
+        out["status"] = job["status"]
+    if job.get("error"):
+        out["error"] = job["error"]
+    if job.get("error_info"):
+        out["error_info"] = job["error_info"]
+    # when done, attach the headline (small) fields for instant rendering
+    if job["status"] == "done" and job.get("report_path"):
+        try:
+            rep = json.loads(Path(job["report_path"]).read_text(encoding="utf-8"))
+            out["summary"] = _headline(rep)
+            out["cached"] = rep.get("cached", False)
+            out["versions"] = rep.get("versions")
+            if rep.get("cached") and not out.get("stages"):
+                # cached results complete before the tracker ticks — surface
+                # the originally measured runtime instead of a fake 0.0
+                out["elapsed_seconds"] = rep.get("total_seconds")
+        except Exception:                         # noqa: BLE001
+            pass
+    out["created_at"] = job.get("created_at")
+    out["finished_at"] = job.get("finished_at")
+    return out
+
+
+def _brief_from_report(job_id: str, report: dict) -> dict:
+    """Brief payload for jobs whose process died but file persists."""
+    return {"job_id": job_id, "status": "done", "mode":
+            report.get("run_mode", "full"),
+            "summary": _headline(report), "cached": report.get("cached", False),
+            "versions": report.get("versions"),
+            "elapsed_seconds": report.get("total_seconds"),
+            "stages": (report.get("progress") or {}).get("stages", []),
+            "stage_seconds": (report.get("progress") or {}).get("stage_seconds", {})}
+
+
+def _headline(rep: dict) -> dict:
+    det = rep.get("detection") or {}
+    cls = rep.get("classification") or {}
+    return {
+        "target_id": rep.get("target_id"),
+        "predicted_class": cls.get("predicted_class"),
+        "top_prob": (max(cls["mean_probs"]) if cls.get("mean_probs") else None),
+        "verdict": (cls.get("flags") or {}).get("verdict"),
+        "ambiguous": (cls.get("flags") or {}).get("ambiguous"),
+        "period_days": det.get("period_days"),
+        "sde": det.get("sde"),
+        "snr": det.get("snr"),
+        "depth_ppm": det.get("depth_ppm"),
+        "n_sectors": (rep.get("ingest") or {}).get("n_sectors"),
+        "total_seconds": rep.get("total_seconds"),
+        "run_mode": rep.get("run_mode", "full"),
+    }
+
+
+@app.get("/api/jobs/{job_id}/result")
+def job_result(job_id: str):
+    """The full report document (fetched once, when the job is done)."""
+    with _JOB_LOCK:
+        job = JOBS.get(job_id)
+    path = (Path(job["report_path"]) if job and job.get("report_path")
+            else settings.RESULT_DIR / f"{job_id}.json")
+    if not path.exists():
+        raise HTTPException(404, "no result stored for this job id")
+    report = json.loads(path.read_text(encoding="utf-8"))
+    return {"job_id": job_id, "status":
+            ("done" if report.get("status") == "ok" else "error"),
+            "report": report}
 
 
 @app.get("/api/model")
@@ -242,6 +401,65 @@ def results_latest():
     return {"available": False}
 
 
+@app.get("/api/results")
+def results_index(limit: int = Query(100, ge=1, le=500)):
+    """Index of persisted single-target analyses (newest first).
+
+    Powers the RESULTS page — previous results open instantly from disk,
+    no re-analysis.  Verify batches are excluded (they live under their
+    own verify_*.json names and the verify page lists them).
+    """
+    out: list[dict] = []
+    paths = sorted(settings.RESULT_DIR.glob("*.json"),
+                   key=lambda p: p.stat().st_mtime, reverse=True)
+    for path in paths:
+        if path.name.startswith("verify_"):
+            continue
+        try:
+            rep = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:                         # noqa: BLE001
+            continue
+        det = rep.get("detection") or {}
+        cls = rep.get("classification") or {}
+        probs = cls.get("mean_probs") or []
+        out.append({
+            "job_id": path.stem,
+            "target_id": rep.get("target_id"),
+            "generated_at": rep.get("generated_at"),
+            "mode": rep.get("run_mode", "full"),
+            "status": rep.get("status", "ok"),
+            "predicted_class": cls.get("predicted_class"),
+            "confidence": round(max(probs), 4) if probs else None,
+            "verdict": (cls.get("flags") or {}).get("verdict"),
+            "cached": bool(rep.get("cached")),
+            "period_days": det.get("period_days"),
+            "sde": det.get("sde"),
+            "n_sectors": (rep.get("ingest") or {}).get("n_sectors"),
+            "total_seconds": rep.get("total_seconds"),
+        })
+        if len(out) >= limit:
+            break
+    return {"results": out, "n": len(out)}
+
+
+@app.get("/api/jobs/{job_id}/report.md")
+def report_markdown(job_id: str):
+    """Compact scientific report (Markdown) generated from the stored JSON.
+
+    Same numbers, zero re-computation — the text is rendered from the
+    persisted report file so the download always matches what the UI shows.
+    """
+    path = settings.RESULT_DIR / f"{job_id}.json"
+    if not path.exists():
+        raise HTTPException(404, "no result stored for this job id")
+    from exovet.reporting.markdown import report_markdown_text
+    rep = json.loads(path.read_text(encoding="utf-8"))
+    return PlainTextResponse(report_markdown_text(rep, job_id),
+                             media_type="text/markdown",
+                             headers={"Content-Disposition":
+                                      f'attachment; filename="exovet_{job_id}.md"'})
+
+
 @app.get("/api/classes")
 def classes():
     return {"classes": [
@@ -249,3 +467,140 @@ def classes():
          "short": settings.CLASS_SHORT[name]}
         for i, name in enumerate(settings.CLASSES)
     ]}
+
+
+# ---------------------------------------------------------------------------
+# Batch verification
+# ---------------------------------------------------------------------------
+
+VERIFY_JOBS: dict[str, dict] = {}
+_VERIFY_LOCK = threading.Lock()
+
+
+class VerifyBatchRequest(BaseModel):
+    tic_ids: list[int]
+    workers: int = 3
+    include_fit: bool = False
+
+
+def _run_verify_job(job_id: str, tic_ids: list[int], workers: int,
+                    include_fit: bool) -> None:
+    from exovet.inference.batch import run_batch
+
+    def progress(done: int, total: int, last: dict) -> None:
+        with _VERIFY_LOCK:
+            VERIFY_JOBS[job_id]["done"] = done
+            VERIFY_JOBS[job_id]["total"] = total
+            VERIFY_JOBS[job_id]["last_target"] = {
+                "target_id": last.get("target_id"),
+                "status": last.get("status"),
+                "predicted_class": last.get("predicted_class"),
+            }
+
+    try:
+        doc = run_batch(
+            tic_ids, default_result_path(job_id),
+            workers=workers, include_fit=include_fit,
+            progress_cb=progress,
+            # retry-friendliness: harvest ok records from earlier verify runs
+            resume_from=sorted(settings.RESULT_DIR.glob("verify_*.json")),
+        )
+        with _VERIFY_LOCK:
+            VERIFY_JOBS[job_id]["status"] = "done"
+            VERIFY_JOBS[job_id]["elapsed_seconds"] = doc.get("elapsed_seconds")
+            VERIFY_JOBS[job_id]["finished_at"] = time.strftime(
+                "%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    except Exception as exc:                          # noqa: BLE001
+        with _VERIFY_LOCK:
+            VERIFY_JOBS[job_id]["status"] = "error"
+            VERIFY_JOBS[job_id]["error"] = f"{type(exc).__name__}: {exc}"
+
+
+@app.post("/api/verify/parse-csv")
+async def verify_parse_csv(file: UploadFile = File(...)):
+    """Extract the TIC ID column from an ExoFOP TIC-search CSV export.
+
+    Strict on purpose: the 'Version' column (e.g. 20160515) looks like an
+    8-digit id, so we only parse a column explicitly named TIC — anything
+    else is refused rather than guessed.
+    """
+    raw = (await file.read()).decode("utf-8-sig", errors="replace")
+    lines = [ln for ln in raw.splitlines() if ln.strip()]
+    if not lines:
+        raise HTTPException(400, "empty file")
+    import csv as _csv
+    import io as _io
+    reader = _csv.DictReader(_io.StringIO("\n".join(lines)))
+    field = next((f for f in (reader.fieldnames or [])
+                  if f.strip().lower().replace("_", " ") in
+                  ("tic id", "ticid", "tic")), None)
+    if field is None:
+        raise HTTPException(
+            400, "no 'TIC ID' column found — export the table from ExoFOP "
+                 "with its default headers, or paste the ids directly")
+    seen: set[int] = set()
+    tic_ids: list[int] = []
+    for row in reader:
+        try:
+            tic = int((row.get(field) or "").strip())
+        except ValueError:
+            continue
+        if tic > 0 and tic not in seen:
+            seen.add(tic)
+            tic_ids.append(tic)
+    if not tic_ids:
+        raise HTTPException(400, "TIC ID column found but no parseable ids")
+    if len(tic_ids) > MAX_BATCH:
+        raise HTTPException(400, f"{len(tic_ids)} ids exceed the batch cap "
+                                 f"of {MAX_BATCH}")
+    return {"tic_ids": tic_ids, "n_unique": len(tic_ids)}
+
+
+@app.post("/api/verify/batch")
+def verify_batch(req: VerifyBatchRequest):
+    tic_ids = sorted({int(t) for t in req.tic_ids if 0 < int(t) <= 10**12})
+    if not tic_ids:
+        raise HTTPException(400, "no valid TIC ids provided")
+    if len(tic_ids) > MAX_BATCH:
+        raise HTTPException(400, f"batch cap is {MAX_BATCH} targets")
+    with _VERIFY_LOCK:
+        running = sum(1 for j in VERIFY_JOBS.values()
+                      if j["status"] in ("queued", "running"))
+        if running >= 2:
+            raise HTTPException(429, "a verification batch is already running")
+        job_id = uuid.uuid4().hex[:12]
+        VERIFY_JOBS[job_id] = {
+            "status": "running", "done": 0, "total": len(tic_ids),
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "config": {"workers": max(1, min(req.workers, 8)),
+                       "include_fit": req.include_fit,
+                       "n_targets": len(tic_ids)},
+        }
+    threading.Thread(target=_run_verify_job,
+                     args=(job_id, tic_ids,
+                           max(1, min(req.workers, 8)), req.include_fit),
+                     daemon=True).start()
+    return {"job_id": job_id, "status": "running",
+            "n_targets": len(tic_ids), "result_path":
+            str(default_result_path(job_id))}
+
+
+@app.get("/api/verify/batch/{job_id}")
+def verify_batch_status(job_id: str):
+    with _VERIFY_LOCK:
+        job = VERIFY_JOBS.get(job_id)
+    if job is None:
+        # results outlive the process — reload a persisted batch file
+        path = default_result_path(job_id)
+        if path.exists():
+            doc = json.loads(path.read_text(encoding="utf-8"))
+            return {"status": "done", "done": len(doc.get("records", [])),
+                    "total": doc.get("config", {}).get("n_targets"),
+                    **doc}
+        raise HTTPException(404, "unknown verify job id")
+    out = dict(job)
+    if job["status"] in ("done", "error"):
+        path = default_result_path(job_id)
+        if path.exists():
+            out.update(json.loads(path.read_text(encoding="utf-8")))
+    return out

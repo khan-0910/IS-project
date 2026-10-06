@@ -1,5 +1,5 @@
 /* EXOVET — scientific instrument interface.
-   Palette: deep space charcoal-blue base, electric cyan signal color,
+   Palette: near-black graphite base, solar amber action accent,
    phosphor mint / azure / coral data series. Flat, high-voltage, no gradients,
    no glow, no rounded cards, no shadows. */
 
@@ -13,18 +13,159 @@
   --text: #f3f6fb;
   --muted: #9aa7bd;
   --faint: #6b7891;
-  --accent: #00e5ff;        /* electric cyan — signal, selection, action */
-  --accent-dim: #0094bd;
-  --accent-faint: rgba(0, 229, 255, 0.08);
+  --accent: #ffb454;        /* solar amber — action, selection, verdicts */
+  --accent-dim: #b87c2a;
+  --accent-faint: rgba(255, 180, 84, 0.09);
   --warn: #ffb020;          /* caution amber — warnings only */
   --teal: #3df2b6;          /* phosphor mint — primary data series */
   --blue: #55a1ff;          /* azure — secondary data series */
   --red: #ff5470;           /* coral — failure, instability */
+  --ok: #3df2b6;            /* semantic success (same phosphor mint) */
   --radius: 2px;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* ---- primary navigation ---- */
+.mainnav {
+  display: flex;
+  gap: 4px;
+}
+
+.navlink {
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.navlink:hover {
+  color: var(--text);
+}
+
+.navlink.active {
+  color: var(--accent);
+  border-color: var(--line-strong);
+  background: var(--accent-faint);
+}
+
+/* ---- keyboard accessibility ---- */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ---- WHAT IS THIS? chips ---- */
+.help-chip {
+  display: inline-block;
+  padding: 1px 7px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  background: transparent;
+  border: 1px dotted var(--line-strong);
+  cursor: help;
+}
+
+.help-chip:hover {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
+.help-note {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0;
+  display: block;
+  width: min(52ch, 84vw);
+  padding: 10px 12px;
+  font-family: var(--font-grotesk);
+  font-size: 12.5px;
+  letter-spacing: 0;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--panel-3);
+  border: 1px solid var(--line-strong);
+}
+
+.help-note b {
+  color: var(--accent);
+}
+
+/* ---- analyze page ---- */
+.analyze-page {
+  flex-direction: column;
+}
+
+.analyze-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mode {
+  font-size: 11px;
+}
+
+.stagegrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0 30px;
+}
+
+.pstep {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--panel-2);
+  font-family: var(--font-grotesk);
+  font-size: 13px;
+}
+
+.pstep .st {
+  width: 18px;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.pstep .st.ok { color: var(--ok); }
+.pstep .st.run { color: var(--accent); animation: pulserun 1.6s ease-in-out infinite; }
+.pstep .st.fail { color: var(--red); }
+.pstep .st.wait { color: var(--faint); }
+
+.pstep .txt { flex: 1; }
+.pstep .txt.ok { color: var(--muted); }
+.pstep .txt.run { color: var(--text); }
+.pstep .txt.fail { color: var(--red); }
+.pstep .txt.wait { color: var(--faint); }
+
+.pstep .secs {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--faint);
+}
+
+@keyframes pulserun {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pstep .st.run { animation: none; }
+  .scanline { display: none; }
 }
 
 html,
@@ -565,6 +706,149 @@ button:disabled {
 
 .chip.red {
   border-color: rgba(255, 84, 112, 0.45);
+  color: var(--red);
+}
+
+/* ---------- verification workspace ---------- */
+
+textarea {
+  background: var(--panel-2);
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  resize: vertical;
+}
+
+textarea:focus {
+  border-color: var(--accent-dim);
+}
+
+.vstats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-left: 1px solid var(--line);
+}
+
+.vstats > div {
+  border-right: 1px solid var(--line);
+  padding: 14px 16px;
+}
+
+.vstats .vlab {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--faint);
+  margin-bottom: 8px;
+}
+
+.cmx {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.cmx th,
+.cmx td {
+  border: 1px solid var(--line);
+  padding: 7px 12px;
+  text-align: center;
+  min-width: 52px;
+}
+
+.cmx th {
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.cmx td.diag {
+  color: var(--accent);
+  background: var(--accent-faint);
+  font-weight: 600;
+}
+
+.cmx td.zero {
+  color: var(--faint);
+}
+
+.cmx td.hit {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.vbar {
+  height: 6px;
+  background: var(--panel-3);
+  border: 1px solid var(--line);
+  position: relative;
+}
+
+.vbar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+  transition: width 600ms ease-out;
+}
+
+.vstream {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.9;
+  color: var(--muted);
+}
+
+.vstream .ok {
+  color: var(--teal);
+}
+
+.vstream .bad {
+  color: var(--red);
+}
+
+.vtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.vtable th {
+  text-align: left;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: var(--faint);
+  font-weight: 500;
+  border-bottom: 1px solid var(--line-strong);
+  padding: 6px 10px 8px 0;
+  white-space: nowrap;
+}
+
+.vtable td {
+  border-bottom: 1px solid var(--panel-2);
+  padding: 7px 10px 7px 0;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.vtable td.strong {
+  color: var(--text);
+}
+
+.vtable tr.match td.strong {
+  color: var(--teal);
+}
+
+.vtable tr.split td.strong {
+  color: var(--warn);
+}
+
+.vtable tr.miss td.strong {
   color: var(--red);
 }
 
