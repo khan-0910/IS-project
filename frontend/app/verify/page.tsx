@@ -30,6 +30,20 @@ const REASON_RULES: Record<string, string> = {
   pc_as_eb: "planet-candidate truths ranked as eclipsing binaries",
 };
 
+interface StoredRun {
+  verify_id: string;
+  generated_at: string;
+  elapsed_seconds?: number | null;
+  n_targets: number;
+  n_ok: number;
+  n_error: number;
+  run_mode?: string | null;
+  accuracy_strict?: number | null;
+  accuracy_relaxed?: number | null;
+  macro_f1?: number | null;
+  ambiguous_pct?: number | null;
+}
+
 interface Mismatch {
   target_id: number;
   toi?: string;
@@ -93,6 +107,7 @@ function Workspace() {
   const [mode, setMode] = useState<"quick" | "full">("quick");
   const [jobId, setJobId] = useState<string | null>(sp.get("job"));
   const [doc, setDoc] = useState<VerifyDoc | null>(null);
+  const [runs, setRuns] = useState<StoredRun[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [technical, setTechnical] = useState(false);
@@ -123,6 +138,16 @@ function Workspace() {
       if (timer.current) clearInterval(timer.current);
     };
   }, [jobId, poll]);
+
+  // stored verification runs power the MODEL VALIDATION subsection
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API}/api/verify/results`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((b) => { if (!cancelled) setRuns(b.runs ?? []); })
+      .catch(() => { if (!cancelled) setRuns([]); });
+    return () => { cancelled = true; };
+  }, []);
 
   function parseText() {
     const ids = Array.from(
@@ -199,8 +224,94 @@ function Workspace() {
         ]}
       />
       <div className="page" style={{ flexDirection: "column", maxWidth: 1180 }}>
-        {/* ============ STEP 1 ============ */}
+        {/* ============ WHAT IS VERIFICATION? (plain-English first screen) ============ */}
         <div className="sect" style={{ borderTop: 0 }}>
+          <div className="sect-head">
+            <span className="label m">MODEL VALIDATION</span>
+            <span className="sub">SIMPLE BY DEFAULT · DETAILED ON DEMAND</span>
+          </div>
+          <p className="statement" style={{ marginTop: 2 }}>
+            Verification compares EXOVET's predictions against targets with
+            known labels.
+          </p>
+          <p className="note" style={{ marginTop: 10, maxWidth: "78ch" }}>
+            Some stars are already studied well enough that astronomers agree on
+            what dips their light — planets, eclipsing stars, or artifacts.
+            EXOVET analyzes those same stars blind, then compares its answer
+            with the accepted one. The result is an honest measure of how well
+            the model performs.
+          </p>
+          <div style={{ marginTop: 14, display: "flex", gap: 28, flexWrap: "wrap" }}>
+            {["1 · Choose targets", "2 · Start verification", "3 · View results"].map((s) => (
+              <span className="label" key={s} style={{ color: "var(--muted)" }}>{s.toUpperCase()}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* ============ MODEL VALIDATION — stored runs, real data ============ */}
+        {runs && runs.length > 0 && (
+          <div className="sect">
+            <div className="sect-head">
+              <span className="label m">PREVIOUS VERIFICATION RUNS</span>
+              <span className="sub">
+                SCORED AGAINST EXOFOP GROUND TRUTH · CLICK TO OPEN
+              </span>
+            </div>
+            <table className="vtable">
+              <thead>
+                <tr>
+                  <th>DATE</th>
+                  <th>MODE</th>
+                  <th style={{ textAlign: "right" }}>TARGETS</th>
+                  <th style={{ textAlign: "right" }}>OK</th>
+                  <th style={{ textAlign: "right" }}>FAILED</th>
+                  <th style={{ textAlign: "right" }}>ACC · STRICT</th>
+                  <th style={{ textAlign: "right" }}>ACC · RELAXED</th>
+                  <th style={{ textAlign: "right" }}>MACRO F1</th>
+                  <th style={{ textAlign: "right" }}>AMBIGUOUS</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {runs.map((run) => (
+                  <tr
+                    key={run.verify_id}
+                    onClick={() => { setJobId(run.verify_id); setBusy(false); }}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <td>{run.generated_at?.slice(0, 16).replace("T", " ") ?? "—"}</td>
+                    <td>{(run.run_mode ?? "—").toUpperCase()}</td>
+                    <td style={{ textAlign: "right" }}>{run.n_targets}</td>
+                    <td style={{ textAlign: "right" }}>{run.n_ok}</td>
+                    <td style={{ textAlign: "right" }}>{run.n_error}</td>
+                    <td style={{ textAlign: "right" }} className="num">
+                      {run.accuracy_strict != null ? `${(run.accuracy_strict * 100).toFixed(0)}%` : "—"}
+                    </td>
+                    <td style={{ textAlign: "right" }} className="num">
+                      {run.accuracy_relaxed != null ? `${(run.accuracy_relaxed * 100).toFixed(0)}%` : "—"}
+                    </td>
+                    <td style={{ textAlign: "right" }} className="num">
+                      {run.macro_f1 != null ? run.macro_f1.toFixed(2) : "—"}
+                    </td>
+                    <td style={{ textAlign: "right" }} className="num">
+                      {run.ambiguous_pct != null ? `${run.ambiguous_pct.toFixed(0)}%` : "—"}
+                    </td>
+                    <td className="label" style={{ color: "var(--accent)" }}>OPEN →</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="note" style={{ margin: "10px 0 0" }}>
+              Strict accuracy counts an exact 5-class match; relaxed accuracy
+              counts grazing-EB and EB as one geometry family. Ambiguous rows
+              are reported honestly, not scored as correct.              Raw numbers open
+              below — nothing is recomputed for display.
+            </p>
+          </div>
+        )}
+
+        {/* ============ STEP 1 ============ */}
+        <div className="sect">
           <div className="sect-head">
             <span className="label m">STEP 1 · CHOOSE TARGETS</span>
             <span className="sub">PASTE TIC IDS OR UPLOAD AN EXOFOP CSV EXPORT</span>

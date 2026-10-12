@@ -315,3 +315,42 @@ def test_recommendations_carry_finding_and_action():
         assert r.get("action"), r
     codes = {r["code"] for r in rep["recommendations"]}
     assert "mc_ambiguous" in codes
+
+
+# ---------------------------------------------------------------------------
+# Verification-run index (MODEL VALIDATION subsection)
+# ---------------------------------------------------------------------------
+
+def test_verify_results_index_lists_persisted_runs(tmp_path, monkeypatch):
+    """GET /api/verify/results serves stored verify_*.json summaries; corrupt
+    files are skipped and non-verify files are never listed."""
+    import exovet.config.settings as st
+
+    monkeypatch.setattr(st, "RESULT_DIR", tmp_path)
+    good = {
+        "generated_at": "2026-10-05T19:04:26Z",
+        "elapsed_seconds": 601.0,
+        "config": {"run_mode": "fast", "n_targets": 3},
+        "records": [{"status": "ok"}, {"status": "ok"}, {"status": "error"}],
+        "verification": {"metrics": {"accuracy_strict": 0.2,
+                                     "accuracy_relaxed": 0.28,
+                                     "macro_f1": 0.31,
+                                     "ambiguous_pct": 64.0}},
+    }
+    (tmp_path / "verify_abc123.json").write_text(json.dumps(good))
+    (tmp_path / "verify_broken.json").write_text("{not json")
+    (tmp_path / "plain_result.json").write_text(json.dumps({"status": "ok"}))
+
+    client = TestClient(app)
+    r = client.get("/api/verify/results")
+    assert r.status_code == 200
+    runs = r.json()["runs"]
+    assert [run["verify_id"] for run in runs] == ["abc123"]
+    run = runs[0]
+    assert run["n_targets"] == 3
+    assert run["n_ok"] == 2
+    assert run["n_error"] == 1
+    assert run["run_mode"] == "fast"
+    assert run["accuracy_strict"] == 0.2
+    assert run["macro_f1"] == 0.31
+    assert run["ambiguous_pct"] == 64.0

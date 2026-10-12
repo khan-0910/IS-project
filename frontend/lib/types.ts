@@ -86,6 +86,24 @@ export interface McClassification {
   seconds?: number;
 }
 
+export interface HarmonicCandidate {
+  multiple: number;
+  period_days: number;
+  power_ratio: number;
+  realization: number;
+  concentration?: number;
+}
+
+/** detection.harmonic_check — EXOVET's alias defence (event realization + scan). */
+export interface HarmonicCheck {
+  enabled: boolean;
+  checked: HarmonicCandidate[];
+  switched_to_multiple: number | null;
+  realization_at_tls_period: number | null;
+  power_at_tls_period?: number | null;
+  reason?: string;
+}
+
 export interface Detection {
   module?: string;
   seconds?: number;
@@ -107,6 +125,9 @@ export interface Detection {
   sde_threshold?: number;
   depth_gate?: number | null;
   warnings?: string[];
+  harmonic_check?: HarmonicCheck;
+  duration_folded_days?: number;
+  search_window_days?: number[];
   [k: string]: unknown;
 }
 

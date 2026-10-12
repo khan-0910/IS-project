@@ -86,9 +86,23 @@ function logTicks(a: number, b: number): number[] {
   return out;
 }
 
-function fmt(v: number): string {
+function fmtLog(v: number): string {
+  // log ticks are always 1/2/5 x 10^n: print them compactly (1, 2, 5, 10, 0.5)
+  const av = Math.abs(v);
+  if (av >= 10000 || (av < 0.01 && av > 0)) return v.toExponential(0).replace("e+", "e");
+  if (av >= 100) return v.toFixed(0);
+  return String(Number(v.toPrecision(6)));
+}
+
+function fmt(v: number, step?: number): string {
   const av = Math.abs(v);
   if (av === 0) return "0";
+  // small tick steps need more decimals than the magnitude rules give,
+  // otherwise adjacent ticks collapse to identical labels (e.g. flux 1.000/1.001)
+  if (step != null && step > 0 && step < 1) {
+    const dec = Math.min(8, Math.max(3, Math.ceil(-Math.log10(step) + 0.3)) + 1);
+    return v.toFixed(dec);
+  }
   if (av >= 10000 || av < 0.01) return v.toExponential(0).replace("e+", "e");
   if (av >= 100) return v.toFixed(0);
   if (av >= 10) return v.toFixed(1);
@@ -116,8 +130,9 @@ export default function SciChart({
 
   const padL = 46,
     padR = 12,
-    padT = 14,
-    padB = 26;
+    padT = 14 + (yLabel ? 10 : 0), // caption gets its own row above the top tick
+    padB = 26 + (xLabel ? 12 : 0); // caption gets its own row below the ticks
+  const tickBaseline = height - 8 - (xLabel ? 12 : 0);
   const iw = Math.max(w - padL - padR, 10);
   const ih = height - padT - padB;
 
@@ -184,6 +199,9 @@ export default function SciChart({
     ? logTicks(Math.pow(10, x0), Math.pow(10, x1))
     : niceTicks(x0, x1, tickX);
   const yticks = niceTicks(y0, y1, 4);
+  const stepOf = (t: number[]) => (t.length > 1 ? Math.abs(t[1] - t[0]) : undefined);
+  const xstep = logX ? undefined : stepOf(xticks);
+  const ystep = stepOf(yticks);
 
   return (
     <div ref={ref} className="chart-frame" style={{ height }}>
@@ -213,7 +231,7 @@ export default function SciChart({
                 strokeWidth={1}
               />
               <text className="tick" x={padL - 6} y={Y(t) + 3} textAnchor="end">
-                {fmt(t)}
+                {fmt(t, ystep)}
               </text>
             </g>
           ))}
@@ -229,8 +247,8 @@ export default function SciChart({
                 strokeDasharray="2 5"
                 opacity={0.55}
               />
-              <text className="tick" x={X(t)} y={height - 8} textAnchor="middle">
-                {fmt(t)}
+              <text className="tick" x={X(t)} y={tickBaseline} textAnchor="middle">
+                {logX ? fmtLog(t) : fmt(t, xstep)}
               </text>
             </g>
           ))}
@@ -338,7 +356,7 @@ export default function SciChart({
             </text>
           )}
           {yLabel && (
-            <text className="axis-label" x={4} y={padT + 8}>
+            <text className="axis-label" x={4} y={9}>
               {yLabel}
             </text>
           )}

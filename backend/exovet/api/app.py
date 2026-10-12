@@ -461,6 +461,23 @@ def report_markdown(job_id: str):
                                       f'attachment; filename="exovet_{job_id}.md"'})
 
 
+@app.get("/api/jobs/{job_id}/report.json")
+def report_json_download(job_id: str):
+    """The persisted analysis report verbatim, as a file download.
+
+    Serves the exact bytes on disk (NaN-sanitized at write time) — the same
+    document the UI renders from, suitable for archival and re-analysis.
+    """
+    path = settings.RESULT_DIR / f"{job_id}.json"
+    if not path.exists():
+        raise HTTPException(404, "no result stored for this job id")
+    return PlainTextResponse(
+        path.read_text(encoding="utf-8"),
+        media_type="application/json",
+        headers={"Content-Disposition":
+                 f'attachment; filename="exovet_{job_id}.json"'})
+
+
 @app.get("/api/classes")
 def classes():
     return {"classes": [
@@ -605,3 +622,39 @@ def verify_batch_status(job_id: str):
         if path.exists():
             out.update(read_json(path))
     return out
+
+
+@app.get("/api/verify/results")
+def verify_results_index(limit: int = Query(50, ge=1, le=200)):
+    """Index of persisted batch-verification runs (newest first).
+
+    Powers the MODEL VALIDATION subsection — completed verification
+    summaries open from disk instantly, no recomputation.  Corrupt
+    files are skipped, never surfaced as runs.
+    """
+    out: list[dict] = []
+    paths = sorted(settings.RESULT_DIR.glob("verify_*.json"),
+                   key=lambda p: p.stat().st_mtime, reverse=True)
+    for path in paths[:limit]:
+        try:
+            doc = read_json(path)
+        except Exception:                     # noqa: BLE001
+            continue
+        ver = doc.get("verification") or {}
+        met = ver.get("metrics") or {}
+        recs = doc.get("records") or []
+        out.append({
+            "verify_id": path.stem.replace("verify_", "", 1),
+            "generated_at": doc.get("generated_at"),
+            "elapsed_seconds": doc.get("elapsed_seconds"),
+            "n_targets": len(recs),
+            "n_ok": sum(1 for r in recs if r.get("status") == "ok"),
+            "n_error": sum(1 for r in recs
+                           if r.get("status") is not None and r.get("status") != "ok"),
+            "run_mode": (doc.get("config") or {}).get("run_mode"),
+            "accuracy_strict": met.get("accuracy_strict"),
+            "accuracy_relaxed": met.get("accuracy_relaxed"),
+            "macro_f1": met.get("macro_f1"),
+            "ambiguous_pct": met.get("ambiguous_pct"),
+        })
+    return {"runs": out}

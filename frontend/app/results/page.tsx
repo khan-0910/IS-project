@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import TopBar from "../../components/TopBar";
 import type { ResultRow } from "../../lib/types";
 
@@ -35,6 +36,11 @@ export default function ResultsPage() {
             <span className="sub">CLICK A ROW TO OPEN THE FULL REPORT — NO RERUN NEEDED</span>
           </div>
           {err && <div className="note warn">{err}</div>}
+          {rows === null && !err && (
+            <div className="note" style={{ padding: "24px 0" }}>
+              LOADING STORED REPORTS…
+            </div>
+          )}
           {rows && rows.length === 0 && (
             <div className="note" style={{ padding: "24px 0" }}>
               NO ANALYSES YET — RUN ONE FROM THE ANALYZE PAGE.
@@ -76,9 +82,9 @@ export default function ResultsPage() {
                       </span>
                     </td>
                     <td>
-                      <a className="label" style={{ color: "var(--accent)" }} href={`/analyze?job=${r.job_id}`}>
+                      <Link className="label" style={{ color: "var(--accent)" }} href={`/analyze?job=${r.job_id}`}>
                         OPEN →
-                      </a>
+                      </Link>
                     </td>
                   </tr>
                 ))}

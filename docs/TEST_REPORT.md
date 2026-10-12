@@ -132,3 +132,48 @@ T14 is additionally measured from the folded curve at half depth (`duration_fold
 ### 10.6 New tests (17)
 
 `backend/tests/test_accuracy_upgrades.py`: alias recovery through `harmonic_scan` on synthetic curves (incl. the trap where the 2× alias has *more* periodogram power than the true multiple), no-switch at the true period, disabled scan, periodogram-gate rejection; `event_realization` ≈ 1/N at an alias; folded-duration measurement + impossible-dip rejection; per-event baseline correction, failed-detrending skip, annulus-overlap and single-event refusals; end-to-end fit on a drifting-baseline synthetic (normalization + decimation + depth recovery); `search_window_days` recording and multi-sector cap; JSON NaN sanitation (write/read).
+
+## 11. Live-run UI freeze — found and fixed (2026-10-07)
+
+**Title.** Analyze page froze at the first pipeline stage during every live analysis.
+
+**Symptom.** User-reported: after starting an analysis the stage list stuck on
+"Load TESS observations", the elapsed timer never moved, and the result never
+appeared — for 25+ minutes while the backend (verified via `/api/health`, CPU
+sampling and `lsof`) had already finished the job in 86 s.
+
+**How it was detected.** Reported by the user during a live session. Backend
+job `cdd7b19b7d8b` (TIC 100100827, FULL) was complete on disk and via
+`GET /api/jobs/{id}?brief=1`, while the browser tab stayed on stage 1. Opening
+the same job URL *after* completion rendered correctly — isolating the defect
+to the live-polling path.
+
+**Root cause.** Two React effects shared one cleanup: the elapsed-clock effect
+called `stopTimers()`, which cleared **both** the status-poll interval and the
+clock interval. The clock effect re-runs exactly when the first status snapshot
+arrives (`status: "running"`) — killing the poller on every live run. Jobs
+opened *after* completion took the single-poll done path and worked, which is
+why prior UI verification (done on completed jobs) missed it. A second,
+related display defect surfaced during verification: for cache-served jobs the
+brief's stage list records only the cache-lookup execution (one stage, ~0.3 s),
+and the page preferred it over the report's full recorded stage timings.
+
+**Fix.** `frontend/app/analyze/page.tsx`: split cleanup into `stopPoll` /
+`stopTick` so the clock can never kill the poller; once a job is done, stage
+timings and elapsed come from the stored report (the analysis's provenance).
+No backend changes.
+
+**Regression test.** The project has no frontend test runner; a React
+effect-timing regression test would require introducing one. Verified manually
+through the real interface instead: (a) a fresh live QUICK run of TIC 16920150
+(cache-miss, 18.4 s real compute) advanced through all stages with the elapsed
+timer moving and completed correctly; (b) the cache-served job
+`4def56328dfe` now displays all 7 recorded stage timings and the report's
+total (00:43) with its CACHED RESULT badge. Adding a frontend test harness is
+listed as a follow-up, not silently skipped.
+
+**Before / after.** Before: live run → frozen stage list + frozen elapsed,
+result never shown (user forced to guess); cache-served job → stage panel
+showed 1 of 7 stages with ELAPSED 00:00. After: stages advance every 2 s poll,
+elapsed counts up, done state shows the full measured stage record from the
+report. Existing completed-job views unchanged.

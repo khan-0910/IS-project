@@ -4,6 +4,8 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TopBar from "../../components/TopBar";
 import Help from "../../components/Help";
+import Explain from "../../components/Explain";
+import { PeriodValidation, ResultWarnings } from "../../components/evidence";
 import {
   DetectionStage,
   FittingStage,
@@ -40,17 +42,119 @@ const MODES: { id: Mode; name: string; blurb: string; detail: string }[] = [
   },
 ];
 
-const PIPELINE_STEPS: { id: string; label: string }[] = [
-  { id: "fetching_data", label: "Load TESS observations" },
-  { id: "preprocessing", label: "Clean + detrend the light curve" },
-  { id: "tls", label: "Search for periodic transits" },
-  { id: "feature_extraction", label: "Measure signal properties" },
-  { id: "classification", label: "AI classification" },
-  { id: "uncertainty", label: "Confidence estimation" },
-  { id: "explainability", label: "Model explainability" },
-  { id: "transit_fit", label: "Transit modelling (MCMC)" },
-  { id: "finalizing", label: "Assemble report" },
+// Beginner-friendly pipeline language. Never hides what EXOVET does —
+// plain words first, the technical identity stays in `tech`.
+const PIPELINE_STEPS: {
+  id: string;
+  label: string;
+  running: string; // sentence shown while the step is active
+  done: string; // sentence shown in the checklist once it finished
+  why: string;
+  how: string;
+  tech: string;
+}[] = [
+  {
+    id: "fetching_data",
+    label: "Getting the data",
+    running: "Getting observations of this star from NASA's TESS data…",
+    done: "Star identified · TESS data retrieved",
+    why: "We need measurements of the star's brightness over time — a planet shows up as a tiny, repeating dip in that record.",
+    how: "EXOVET retrieves available TESS light-curve observations through the astronomical data archive (MAST).",
+    tech: "exovet.data.ingest — lightkurve download, quality-flag masks, sector caps, full provenance block stored in the report.",
+  },
+  {
+    id: "preprocessing",
+    label: "Cleaning the data",
+    running: "Removing slow changes and unwanted trends…",
+    done: "Noise reduced",
+    why: "A planet's transit can be extremely small compared with other changes in a star's brightness, so slow drifts must be removed first.",
+    how: "EXOVET detrends the light curve before searching for transits.",
+    tech: "exovet.preprocessing.clean — wotan biweight filter, quality flags, only upward spikes clipped (real dips are never removed).",
+  },
+  {
+    id: "tls",
+    label: "Searching for repeating dips",
+    running: "Searching thousands of possible orbital periods…",
+    done: "Transit search complete",
+    why: "A planet crossing its star can block a tiny amount of starlight, over and over, once per orbit.",
+    how: "EXOVET searches many possible orbital periods using Transit Least Squares.",
+    tech: "exovet.detection.tls_search — TLS period scan 0.5–30 d, SDE/SNR/depth measured at the peak period.",
+  },
+  {
+    id: "feature_extraction",
+    label: "Measuring the signal",
+    running: "Measuring the shape and strength of the dip…",
+    done: "Signal measured",
+    why: "The exact shape, depth and timing of a dip carry clues about what caused it.",
+    how: "EXOVET computes 33 measurable properties of the signal, which the classifier reads alongside the light curve.",
+    tech: "exovet.features.engineering — scalar feature vector; definitions and units at /api/features.",
+  },
+  {
+    id: "classification",
+    label: "AI vetting",
+    running: "Comparing the signal with known types of astronomical events…",
+    done: "AI classification complete",
+    why: "Not every repeating dip is caused by a planet — stars, blends and spacecraft artifacts can produce them too.",
+    how: "The model compares signal characteristics against five classes and picks the most likely one.",
+    tech: "exovet.models — small Transformer over 3 views + 33 features, softmax over 5 physical classes.",
+  },
+  {
+    id: "uncertainty",
+    label: "Checking the confidence",
+    running: "Checking how strongly the model supports its answer…",
+    done: "Confidence estimated",
+    why: "Some signals are genuinely ambiguous, and it is more honest to say so than to hide it.",
+    how: "EXOVET uses repeated stochastic model passes to estimate predictive uncertainty.",
+    tech: "exovet.uncertainty.mc_dropout — N stochastic passes; mean/std probabilities, entropy, mutual information, ambiguity verdict.",
+  },
+  {
+    id: "explainability",
+    label: "Explaining the decision",
+    running: "Mapping which parts of the signal influenced the model…",
+    done: "Model explainability complete",
+    why: "It matters where the model looked — but only a diagnostic of that, not a guarantee it is right.",
+    how: "An attention rollout shows which parts of the signal influenced the classification.",
+    tech: "exovet.interpretability.attention — attention rollout (Abnar & Zuidema 2020), per-view token influence.",
+  },
+  {
+    id: "transit_fit",
+    label: "Modelling the transit",
+    running: "Fitting a physical transit model to the observed dip…",
+    done: "Transit model fitted",
+    why: "The depth and duration of a dip tell us about the size of the object and its orbit.",
+    how: "EXOVET fits a physical transit model to the observed light curve.",
+    tech: "exovet.fitting.transit_fit — batman forward model + emcee MCMC posteriors (Rp/Rs, a/Rs, b), period fixed to TLS.",
+  },
+  {
+    id: "finalizing",
+    label: "Finalizing the result",
+    running: "Assembling the result and saving the report…",
+    done: "Result finalized",
+    why: "The result is saved as a complete, reproducible report you can download.",
+    how: "EXOVET stores the report verbatim, with code versions, model versions and configuration hash.",
+    tech: "data/results/<job_id>.json — schema-versioned, keyed cache; versions block records pipeline/model/config identity.",
+  },
 ];
+
+// one honest plain-language sentence per class — cautious wording, never
+// claims a confirmed planet (SCIENTIFIC INTEGRITY rule)
+const RESULT_SENTENCE: Record<string, string> = {
+  planet_candidate:
+    "We found a repeating dip in the star's brightness that is consistent with a possible planetary transit.",
+  eclipsing_binary:
+    "The repeating dips most likely come from a second star orbiting the target — stellar eclipses, not a planet.",
+  grazing_eclipsing_binary:
+    "The dips look like stellar eclipses seen edge-on, where the two stars barely overlap.",
+  contamination_blend:
+    "The dip may belong to a nearby star whose light is mixed into the same pixels as the target.",
+  instrumental_systematic:
+    "The dip looks like an artifact of the spacecraft or data processing, not a real astrophysical event.",
+};
+
+function fmtPeriod(d: number): string {
+  if (d >= 2) return `${d.toFixed(2)} days`;
+  return `${(d * 24).toFixed(1)} hours`;
+}
 
 const SHORT: Record<string, string> = {
   planet_candidate: "PLANET CANDIDATE",
@@ -83,12 +187,21 @@ function Workspace() {
   const [elapsed, setElapsed] = useState(0);
   const [section, setSection] = useState<string>("summary");
   const [lcTab, setLcTab] = useState<"raw" | "detrended" | "phase">("detrended");
+  const [detail, setDetail] = useState<"basic" | "advanced">("basic");
   const [drawer, setDrawer] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // single-stop for job completion; split-stops below so the elapsed clock
+  // can never kill the status poller (that froze live runs at stage 1)
   const stopTimers = useCallback(() => {
     if (pollRef.current) clearInterval(pollRef.current);
+    if (tickRef.current) clearInterval(tickRef.current);
+  }, []);
+  const stopPoll = useCallback(() => {
+    if (pollRef.current) clearInterval(pollRef.current);
+  }, []);
+  const stopTick = useCallback(() => {
     if (tickRef.current) clearInterval(tickRef.current);
   }, []);
 
@@ -129,19 +242,19 @@ function Workspace() {
     if (!jobId) return;
     poll(jobId);
     pollRef.current = setInterval(() => poll(jobId), 2000);
-    return stopTimers;
-  }, [jobId, poll, stopTimers]);
+    return stopPoll;
+  }, [jobId, poll, stopPoll]);
 
-  // elapsed clock tied to the job's creation time (survives re-polls)
+  // elapsed clock ticks only while the job is active; must not touch the poller
   useEffect(() => {
-    stopTimers();
+    stopTick();
     setElapsed(0);
     if (!brief || brief.status === "done" || brief.status === "error") return;
     tickRef.current = setInterval(
       () => setElapsed((e) => e + 1),
       1000
     );
-    return stopTimers;
+    return stopTick;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brief?.status === "running" || brief?.status === "queued", jobId]);
 
@@ -205,7 +318,13 @@ function Workspace() {
   const running = busy || brief?.status === "running" || brief?.status === "queued";
   const failed = brief?.status === "error";
   const sum = brief?.summary;
-  const stages = brief?.stages ?? rep?.progress?.stages ?? [];
+  // live stage list comes from the brief while the job runs; once it is done
+  // the report's recorded stage timings are authoritative — cache-served jobs
+  // only execute the cache lookup, so the brief under-reports their stages
+  const stages =
+    brief && brief.status !== "done"
+      ? (brief.stages ?? [])
+      : (rep?.progress?.stages?.length ? rep.progress.stages : brief?.stages) ?? [];
   const cls = rep?.classification;
   const det = rep?.detection;
   const s: SeriesSection | undefined = rep?.series;
@@ -259,7 +378,12 @@ function Workspace() {
               onKeyDown={(e) => e.key === "Enter" && tic && !running && run()}
               inputMode="numeric"
             />
-            <span className="label" style={{ margin: "0 10px" }}>OR</span>
+            <Help
+              term="WHAT IS A TIC ID?"
+              text="A TIC ID is the catalog number used to identify a star in NASA's TESS data — you can find them in the TESS Input Catalog or on ExoFOP."
+              more="Every TESS target has one. If you don't have a specific star in mind, try the example above."
+            />
+            <span className="label">OR</span>
             <label className="tab" style={{ cursor: "pointer" }}>
               <input
                 type="file"
@@ -333,6 +457,28 @@ function Workspace() {
                 {running && brief?.message ? brief.message.toUpperCase() : "MEASURED STAGE TIMINGS"}
               </span>
             </div>
+            {/* current step, in beginner language + WHY/HOW */}
+            {running &&
+              (() => {
+                const active = stages.find((x) => x.status === "running");
+                const step =
+                  (active && PIPELINE_STEPS.find((p) => p.id === active.stage)) ??
+                  PIPELINE_STEPS.filter(
+                    (p) => mode === "full" || !["explainability", "transit_fit"].includes(p.id)
+                  ).find((p) => !stages.some((x) => x.stage === p.id));
+                if (!step) return null;
+                return (
+                  <div style={{ marginBottom: 18 }}>
+                    <div style={{ fontSize: 17, fontWeight: 600, color: "var(--text)" }}>
+                      {step.label}
+                    </div>
+                    <div className="pstep-current-line" style={{ color: "var(--muted)", marginTop: 4, fontSize: 15 }}>
+                      {step.running}
+                    </div>
+                    <Explain why={step.why} how={step.how} tech={step.tech} inline />
+                  </div>
+                );
+              })()}
             <div className="stagegrid">
               {PIPELINE_STEPS.filter(
                 (st) => mode === "full" || !["explainability", "transit_fit"].includes(st.id)
@@ -346,11 +492,13 @@ function Workspace() {
                       ? "fail"
                       : "run";
                 return (
-                  <div key={st.id} className="pstep">
+                  <div key={st.id} className="pstep" title={st.tech}>
                     <span className={`st ${state}`}>
                       {state === "ok" ? "✓" : state === "run" ? "●" : state === "fail" ? "×" : "○"}
                     </span>
-                    <span className={`txt ${state}`}>{st.label}</span>
+                    <span className={`txt ${state}`}>
+                      {state === "ok" ? st.done : state === "wait" ? st.label : st.running.replace(/…$/, "")}
+                    </span>
                     {ev?.seconds != null && (
                       <span className="secs">{ev.seconds.toFixed(1)}s</span>
                     )}
@@ -359,7 +507,11 @@ function Workspace() {
               })}
             </div>
             <div className="statusline">
-              <span>ELAPSED <b>{fmtElapsed(brief?.elapsed_seconds ?? elapsed)}</b></span>
+              <span>ELAPSED <b>{fmtElapsed(
+                brief?.status === "done" && rep?.progress?.total_seconds != null
+                  ? rep.progress.total_seconds
+                  : brief?.elapsed_seconds ?? elapsed
+              )}</b></span>
               <span className="note">
                 TIME VARIES WITH THE NUMBER OF TESS SECTORS AND AVAILABLE OBSERVATIONS.
               </span>
@@ -404,52 +556,108 @@ function Workspace() {
               <div className="sect-head">
                 <span className="label m">PRIMARY RESULT</span>
                 <span className="sub" style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  {/* BASIC / ADVANCED — same components, extra detail revealed */}
+                  <span className="tabs" role="group" aria-label="Detail level">
+                    <button
+                      className={`tab${detail === "basic" ? " active" : ""}`}
+                      aria-pressed={detail === "basic"}
+                      onClick={() => setDetail("basic")}
+                    >
+                      BASIC
+                    </button>
+                    <button
+                      className={`tab${detail === "advanced" ? " active" : ""}`}
+                      aria-pressed={detail === "advanced"}
+                      onClick={() => setDetail("advanced")}
+                    >
+                      ADVANCED
+                    </button>
+                  </span>
                   {rep.cached && <span className="chip amber">CACHED RESULT</span>}
                   {["QUICK", "FAST"].includes((sum?.run_mode ?? rep.run_mode)?.toUpperCase() ?? "") ? "QUICK ANALYSIS" : "FULL ANALYSIS"}
                   · <button className="tab" onClick={() => setDrawer(!drawer)} aria-expanded={drawer}>
                     TARGET INFO {drawer ? "▾" : "▸"}
                   </button>
+                  · <a className="tab" href={`${API}/api/jobs/${jobId}/report.md`} download aria-label="Download the analysis report as Markdown">
+                    REPORT ↓MD
+                  </a>
+                  · <a className="tab" href={`${API}/api/jobs/${jobId}/report.json`} download aria-label="Download the raw analysis JSON report">
+                    RAW ↓JSON
+                  </a>
                 </span>
               </div>
               {rep.status === "ok" && predClass ? (
-                <div style={{ display: "flex", alignItems: "baseline", gap: 34, flexWrap: "wrap" }}>
-                  <div>
-                    <div style={{ fontSize: 36, fontWeight: 700, letterSpacing: "0.01em" }}>
-                      {SHORT[predClass] ?? predClass}
+                <>
+                  {/* --- WHAT DID WE FIND? --- */}
+                  <div className="label" style={{ marginBottom: 8, color: "var(--faint)" }}>
+                    WHAT DID WE FIND?
+                  </div>
+                  <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: "0.01em" }}>
+                    {SHORT[predClass] ?? predClass}
+                  </div>
+                  <p className="note" style={{ marginTop: 8, fontSize: 16.5, maxWidth: "68ch" }}>
+                    {RESULT_SENTENCE[predClass] ?? "EXOVET classified the repeating signal it found in this star's brightness."}
+                    {det?.period_days != null
+                      ? ` The detected pattern repeats every ${fmtPeriod(det.period_days)}.`
+                      : ""}
+                  </p>
+                  <Explain
+                    why={
+                      ambiguous
+                        ? "The signal repeats at a consistent period, but the model could not strongly separate the leading explanations — that is exactly what the ambiguity flag reports."
+                        : "The signal repeats at a consistent period and moves the model most strongly toward this class, ahead of the other four possibilities."
+                    }
+                    how="EXOVET compared the signal's measured properties and light-curve views against five known types of astronomical events, then averaged over repeated model passes to score confidence."
+                    tech={
+                      cls && (
+                        <>
+                          5-class softmax · {cls.n_passes} MC-Dropout passes · top-1−top-2
+                          margin {cls.top_margin.toFixed(3)} · predictive entropy {cls.predictive_entropy.toFixed(3)}
+                          {cls.model_checkpoint?.test_macro_f1 != null
+                            ? ` · checkpoint test macro-F1 ${cls.model_checkpoint.test_macro_f1.toFixed(3)}`
+                            : ""}
+                        </>
+                      )
+                    }
+                  />
+
+                  {/* --- HOW CONFIDENT ARE WE? --- */}
+                  <div style={{ marginTop: 26, display: "flex", gap: 34, alignItems: "baseline", flexWrap: "wrap" }}>
+                    <div>
+                      <div className="label" style={{ marginBottom: 8, color: "var(--faint)" }}>
+                        HOW CONFIDENT ARE WE?
+                      </div>
+                      <div className="bignum amber">
+                        {topProb != null ? (topProb * 100).toFixed(1) : "—"}
+                        <small>%</small>
+                      </div>
                     </div>
-                    <div style={{ marginTop: 10, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                    <div style={{ alignSelf: "center" }}>
                       <span className={`chip ${verdict === "confident" ? "amber" : verdict === "unstable" ? "red" : ""}`}>
-                        CONFIDENCE: {confidenceBand(topProb, !!ambiguous)}
+                        {confidenceBand(topProb, !!ambiguous)}
                       </span>
                       {ambiguous && (
                         <span className="chip red" title="The model did not strongly separate the leading classes.">
-                          AMBIGUOUS RESULT
+                          AMBIGUOUS
                         </span>
                       )}
-                      <span className="label">
+                      <span className="label" style={{ marginLeft: 12 }}>
+                        A model output, not a guarantee
                         <Help
                           term="CONFIDENCE"
                           text="The model's probability for its leading class, averaged over repeated stochastic passes."
-                          more="It is a model output, not a guarantee — check the ambiguity flag and the ranked classes below."
+                          more="It is a model output, not a guarantee — see the ranked classes in WHY THIS CLASSIFICATION below."
                         />
                       </span>
                     </div>
                     {ambiguous && (
-                      <p className="note" style={{ marginTop: 10, maxWidth: "70ch" }}>
-                        The model did not strongly separate the leading classes
-                        (top-1 − top-2 margin below the documented threshold).
-                        Treat the percentages as ordinal hints, not a verdict.
+                      <p className="note" style={{ maxWidth: "60ch" }}>
+                        The model did not strongly separate the leading classes — treat the
+                        percentages as ordinal hints, not a verdict.
                       </p>
                     )}
                   </div>
-                  <div>
-                    <div className="label" style={{ marginBottom: 8 }}>MODEL CONFIDENCE</div>
-                    <div className="bignum amber">
-                      {topProb != null ? (topProb * 100).toFixed(1) : "—"}
-                      <small>%</small>
-                    </div>
-                  </div>
-                </div>
+                </>
               ) : (
                 <div className="note">
                   {rep.error
@@ -458,29 +666,51 @@ function Workspace() {
                 </div>
               )}
 
-              {/* summary readouts */}
-              <div className="sysgrid" style={{ marginTop: 18 }}>
+              {/* WHAT DID WE MEASURE? — beginner-first signal readout */}
+              <div style={{ marginTop: 26 }}>
+                <div className="label" style={{ marginBottom: 12, color: "var(--faint)" }}>
+                  WHAT DID WE MEASURE?
+                </div>
+              </div>
+              <div className="sysgrid" style={{ marginTop: 0 }}>
                 {[
-                  ["DETECTED PERIOD", det?.period_days != null ? `${det.period_days.toFixed(5)} d` : "—"],
-                  ["SDE", <HelpInline key="sde" term="SDE" value={det?.sde != null ? det.sde.toFixed(2) : "—"}
-                    text="Signal Detection Efficiency from TLS — how prominent the transit-like signal is compared with noise." />],
-                  ["SNR", <HelpInline key="snr" term="SNR" value={det?.snr != null ? det.snr.toFixed(2) : "—"}
-                    text="Signal-to-noise ratio of the detected signal." />],
-                  ["DEPTH", det?.depth_ppm != null ? `${Math.round(det.depth_ppm)} ppm` : "—"],
-                  ["SECTORS", String(sum?.n_sectors ?? rep.ingest?.n_sectors ?? "—")],
+                  ["REPEATING PERIOD", det?.period_days != null ? det.period_days.toFixed(5) : "—", det?.period_days != null ? fmtPeriod(det.period_days) : ""],
+                  ["DEPTH OF DIP", det?.depth_ppm != null ? `${Math.round(det.depth_ppm)}` : "—",
+                    det?.depth_ppm != null ? `parts per million (${(det.depth_ppm / 1e4).toFixed(3)}% of starlight)` : ""],
+                  ["SIGNAL STRENGTH",
+                    <HelpInline key="ss" term="STRENGTH" value={(det?.signal_strength ?? "—").toUpperCase()}
+                      text="How prominent the transit-like signal is against the noise, measured during the period search (SDE/SNR below)." />],
+                  ["TESS SECTORS", String(sum?.n_sectors ?? rep.ingest?.n_sectors ?? "—"),
+                    `${sum?.n_sectors ?? rep.ingest?.n_sectors ?? ""} separate viewing campaigns of this star`],
                 ].map((entry, i) => {
-                  const [k, v] = entry as [string, React.ReactNode];
+                  const [k, v, sub] = entry as [string, React.ReactNode, string];
                   return (
                     <div key={k}>
                       <div className="label">{k}</div>
-                      <div className="num" style={{ fontSize: 16, marginTop: 8, color: i === 0 ? "var(--accent)" : undefined }}>
+                      <div className="num" style={{ fontSize: 18, marginTop: 8, color: i === 0 ? "var(--accent)" : undefined }}>
                         {v}
                       </div>
+                      {sub && <div className="note" style={{ marginTop: 4 }}>{sub}</div>}
                     </div>
                   );
                 })}
+                {/* technical detail stays available — SDE/SNR/FAP — not forced */}
+                <div>
+                  <div className="bignum amber">
+                    {det?.sde != null ? det.sde.toFixed(2) : "—"}
+                    <small>SDE</small>
+                  </div>
+                  <div className="num" style={{ fontSize: 13, color: "var(--muted)", marginTop: 6 }}>
+                    SNR {det?.snr != null ? det.snr.toFixed(2) : "—"} · FAP {det?.fap != null ? det.fap.toExponential(1) : "—"}
+                    <Help
+                      term="SDE / SNR / FAP"
+                      text="SDE = how prominent the transit-shaped signal is vs noise; SNR = signal-to-noise ratio; FAP = false-alarm probability of the periodogram peak."
+                    />
+                  </div>
+                </div>
               </div>
 
+              <ResultWarnings report={rep} />
               {drawer && <TargetDrawer rep={rep} />}
             </div>
 
@@ -527,9 +757,24 @@ function Workspace() {
                 />
               )}
               <p className="note" style={{ margin: "8px 0 0" }}>
-                {lcTab === "raw" && "Raw photometry as retrieved — instrumental trends still visible."}
-                {lcTab === "detrended" && "Long-term instrumental trends removed; real short dips (transits/eclipses) preserved."}
-                {lcTab === "phase" && "Observations are aligned by orbital phase so repeated transit events can be compared together."}
+                {lcTab === "raw" &&
+                  "The star's measured brightness as retrieved — instrumental trends still visible."}
+                {lcTab === "detrended" &&
+                  "The same record with slow instrumental trends removed — real short dips preserved."}
+                {lcTab === "phase" &&
+                  "The observations rearranged by the suspected orbital period so repeated transit events appear together."}
+                <Explain
+                  why="A planet crossing in front of a star dims it by a tiny, repeatable amount, once per orbit."
+                  how="TESS measures the star's brightness every 2 minutes; EXOVET removes instrumental trends so that the small transit-shaped dips stand out."
+                  tech={
+                    <>
+                      Source: {(rep.ingest?.data_source ?? "TESS/MAST").toUpperCase()} ·{" "}
+                      {rep.ingest?.n_points_raw?.toLocaleString() ?? "?"} raw samples ·{" "}
+                      {rep.ingest?.n_sectors ?? "?"} sector(s) · 2-min cadence where available
+                    </>
+                  }
+                  inline
+                />
               </p>
             </div>
 
@@ -537,9 +782,9 @@ function Workspace() {
             {det?.period_days != null && (
               <div className="sect">
                 <div className="sect-head">
-                  <span className="label m">TRANSIT DETECTION</span>
+                  <span className="label m">TRANSIT SEARCH</span>
                   <span className="sub">
-                    TLS SEARCHES FOR PERIODIC TRANSIT-SHAPED SIGNALS ·{" "}
+                    HOW EXOVET FINDS THE REPEATING DIP ·{" "}
                     <Help
                       term="TLS"
                       text="Transit Least Squares — scans many trial periods and scores how well a boxy transit matches at each."
@@ -572,34 +817,44 @@ function Workspace() {
               </div>
             )}
 
-            {/* SECTIONS 4-6 — the deeper evidence (scientifically cautious wording kept) */}
-            <SectionDisclose title="WHY THIS CLASSIFICATION?" note="RANKED CLASSES · ATTENTION EVIDENCE (DIAGNOSTIC, NOT CAUSAL)">
+            {/* SECTION 3b — PERIOD VALIDATION (the alias defence, surfaced) */}
+            <PeriodValidation det={det} />
+
+            {/* SECTIONS 4-6 — deeper evidence, ADVANCED only (same components,
+                additional details revealed — the page is never duplicated) */}
+            {detail === "advanced" && (
+              <SectionDisclose title="WHY THIS CLASSIFICATION?" note="RANKED CLASSES · ATTENTION EVIDENCE (DIAGNOSTIC, NOT CAUSAL)">
               {cls ? <VettingStage report={rep} busy={false} /> : <div className="note">No classification in this report.</div>}
-            </SectionDisclose>
+              </SectionDisclose>
+            )}
 
-            <SectionDisclose
-              title="TRANSIT MODEL"
-              note="PHYSICAL FIT — FULL ANALYSIS ONLY"
-              defaultOpen={rep.transit_fit?.status === "ok"}
-            >
-              {rep.transit_fit ? (
-                <FittingStage report={rep} busy={false} />
-              ) : (
-                <div className="note">
-                  Not part of this run — the physical transit model (batman +
-                  emcee MCMC) is included in Full Analysis.
-                </div>
-              )}
-            </SectionDisclose>
+            {detail === "advanced" && (
+              <SectionDisclose
+                title="TRANSIT MODEL"
+                note="PHYSICAL FIT — FULL ANALYSIS ONLY"
+                defaultOpen={rep.transit_fit?.status === "ok"}
+              >
+                {rep.transit_fit ? (
+                  <FittingStage report={rep} busy={false} />
+                ) : (
+                  <div className="note">
+                    Not part of this run — the physical transit model (batman +
+                    emcee MCMC) is included in Full Analysis.
+                  </div>
+                )}
+              </SectionDisclose>
+            )}
 
-            <SectionDisclose title="DETAILED RESULTS" note="DETECTION NUMBERS · 33 FEATURES · RAW JSON · PROVENANCE">
+            {detail === "advanced" && (
+              <SectionDisclose title="DETAILED RESULTS" note="DETECTION NUMBERS · 33 FEATURES · RAW JSON · PROVENANCE">
               <div className="tabs" style={{ marginBottom: 12 }}>
                 <button className="tab active" type="button">OVERVIEW OF ARTIFACTS</button>
               </div>
               <DetectionStage report={rep} busy={false} />
               <FeaturesStage report={rep} busy={false} />
               <ReportStage report={rep} busy={false} jobId={jobId} />
-            </SectionDisclose>
+              </SectionDisclose>
+            )}
           </>
         )}
 
@@ -665,6 +920,9 @@ function TargetDrawer({ rep }: { rep: Report }) {
     ["TIME SPAN", pp?.stats?.time_span_days != null ? `${pp.stats.time_span_days.toFixed(1)} d` : "—"],
     ["CADENCE", pp?.stats?.cadence_seconds != null ? `${pp.stats.cadence_seconds.toFixed(0)} s` : "—"],
     ["DATA SOURCE", ing?.data_source ?? "—"],
+    ["MODEL CHECKPOINT", rep.versions?.model ?? "—"],
+    ["PIPELINE", rep.versions?.pipeline ?? "—"],
+    ["CONFIG SHA", rep.versions?.pipeline_config_sha ?? "—"],
     ["TESS MAGNITUDE", stellar.Tmag != null ? String(stellar.Tmag) : "—"],
     ["EFFECTIVE TEMP", stellar.Teff != null ? `${stellar.Teff} K` : "—"],
     ["STELLAR RADIUS", stellar.rad != null ? `${stellar.rad} R☉` : "—"],

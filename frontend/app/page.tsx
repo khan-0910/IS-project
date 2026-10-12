@@ -1,18 +1,54 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import SciChart, { type Pt } from "../components/SciChart";
 import TopBar from "../components/TopBar";
 import Help from "../components/Help";
+import Explain from "../components/Explain";
 import type { DemoCurve, ResultRow } from "../lib/types";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+/* FRIENDLY SCIENTIFIC INSTRUMENT — 6 steps, WHY/HOW optional per step. */
 const STEPS = [
-  ["01 — LOAD TESS DATA", "Point EXOVET at a TESS target id (TIC). Real observations come straight from the MAST archive."],
-  ["02 — DETECT TRANSITS", "The light curve is cleaned and scanned for periodic, transit-shaped dips."],
-  ["03 — VET THE CANDIDATE", "A trained model sorts the signal into five physical scenarios and reports its own confidence."],
+  {
+    t: "OBSERVE",
+    d: "We start with measurements of a star's brightness.",
+    why: "A planet crossing in front of its star dims it very slightly, once per orbit.",
+    how: "EXOVET pulls real photometry of a TESS target from the MAST archive via lightkurve.",
+  },
+  {
+    t: "CLEAN",
+    d: "We remove long-term trends and unwanted noise.",
+    why: "Slow instrument drifts would otherwise bury the tiny transit dips.",
+    how: "A robust biweight filter (wotan) removes slow trends while preserving transit shapes; real dips are never clipped.",
+  },
+  {
+    t: "SEARCH",
+    d: "We look for repeating dips that could be caused by a transit.",
+    why: "A real planet repeats its dip once every orbit — random noise does not.",
+    how: "Transit Least Squares tests many possible orbital periods and looks for signals shaped like planetary transits.",
+  },
+  {
+    t: "CHECK",
+    d: "We test whether the detected pattern is actually consistent.",
+    why: "A false period can make unrelated dips appear to line up; TLS sometimes locks onto a fraction of the true period.",
+    how: "EXOVET checks event realization (that predicted dips are actually observed) and compares harmonic multiples.",
+  },
+  {
+    t: "CLASSIFY",
+    d: "AI compares the signal with known types of astronomical events.",
+    why: "Not every repeating dip is caused by a planet — stars and artifacts can mimic one.",
+    how: "A machine-learning model sorts the signal into five physical scenarios and reports its confidence.",
+  },
+  {
+    t: "EXPLAIN",
+    d: "EXOVET shows the evidence, uncertainty, and fitted transit.",
+    why: "A trustworthy result shows its work — including when it is unsure.",
+    how: "Ranked probabilities, attention diagnostics and a physical transit fit are in the full report; for Full Analysis the transit model is fitted with MCMC.",
+  },
 ];
 
 export default function Home() {
@@ -81,13 +117,17 @@ export default function Home() {
           </div>
 
           <p className="statement" style={{ marginTop: 22 }}>
-            EXOVET takes a TESS target, pulls its real observations, searches
-            for transits, and tells you what the signal probably is — with an
-            honest measure of its own confidence.
+            Find and investigate possible exoplanets hidden inside noisy
+            starlight.
+          </p>
+          <p className="note" style={{ marginTop: 12, maxWidth: "48ch" }}>
+            EXOVET takes measurements of a star's brightness, looks for tiny
+            repeating dips, and uses AI to determine what might have caused
+            them.
           </p>
 
           {/* -------- start here -------- */}
-          <div className="sect" style={{ border: 0, borderTop: "1px solid var(--line)", padding: "18px 0 6px", marginTop: 18 }}>
+          <div className="sect" style={{ border: 0, borderTop: "1px solid var(--line)", padding: "20px 0 6px", marginTop: 20 }}>
             <div className="label m" style={{ marginBottom: 10 }}>START HERE</div>
             <div style={{ display: "flex", gap: 10 }}>
               <input
@@ -99,34 +139,40 @@ export default function Home() {
                 onKeyDown={(e) => e.key === "Enter" && tic && run()}
                 inputMode="numeric"
               />
+              <Help
+                term="WHAT IS A TIC ID?"
+                text="A TIC ID is the catalog number used to identify a star in NASA's TESS data."
+                more="Every TESS target has one. If you don't have a specific star in mind, open the example analysis below."
+              />
               <button onClick={run} disabled={busy || !tic} style={{ minWidth: 190 }}>
-                {busy ? "SUBMITTING…" : "START ANALYSIS →"}
+                {busy ? "SUBMITTING…" : "ANALYZE A STAR →"}
               </button>
             </div>
             <div style={{ display: "flex", gap: 18, marginTop: 12, alignItems: "center", flexWrap: "wrap" }}>
-              <a className="label" style={{ color: "var(--accent)" }} href="/verify">
-                VERIFY MODEL →
-              </a>
+              <Link className="label" style={{ color: "var(--accent)" }} href="/about">
+                SEE HOW IT WORKS →
+              </Link>
               {example?.job_id && (
-                <a className="label" style={{ color: "var(--muted)" }} href={`/analyze?job=${example.job_id}`}>
+                <Link className="label" style={{ color: "var(--muted)" }} href={`/analyze?job=${example.job_id}`}>
                   LOAD EXAMPLE ANALYSIS (PREVIOUSLY ANALYZED TARGET)
-                </a>
+                </Link>
               )}
             </div>
             {err && <div className="note warn" style={{ marginTop: 10 }}>{err}</div>}
           </div>
 
-          {/* -------- 3 steps -------- */}
-          <div style={{ marginTop: 26 }}>
+          {/* -------- 6 steps, each with optional WHY / HOW -------- */}
+          <div style={{ marginTop: 28 }}>
             <div className="label m" style={{ marginBottom: 6 }}>
               HOW IT WORKS
             </div>
-            {STEPS.map(([t, d]) => (
-              <div className="stage" key={t}>
-                <span className="no" style={{ color: "var(--accent)" }}>{t.slice(0, 2)}</span>
+            {STEPS.map((st, i) => (
+              <div className="stage" key={st.t}>
+                <span className="no" style={{ color: "var(--accent)" }}>{String(i + 1).padStart(2, "0")}</span>
                 <div>
-                  <div className="t">{t.slice(5)}</div>
-                  <div className="d">{d}</div>
+                  <div className="t">{st.t}</div>
+                  <div className="d">{st.d}</div>
+                  <Explain why={st.why} how={st.how} />
                 </div>
               </div>
             ))}
