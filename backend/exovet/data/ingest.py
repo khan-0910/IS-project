@@ -14,6 +14,7 @@ the samples and an unambiguous record of where they came from.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 import re
@@ -89,11 +90,161 @@ def parse_tic_id(raw: str) -> int:
 
 
 # --------------------------------------------------------------------------
+# Direct S3 fallback (QLP HLSP on stpubdata)
+# --------------------------------------------------------------------------
+
+# Amazon S3 public copy of MAST HLSP data (registry.opendata.aws/tess). The
+# MAST Portal API (mast.stsci.edu/api/v0.1/InvokeAction) has had outages;
+# this path retrieves the same mission data — QLP 30-minute-cadence light
+# curves derived from the FFIs — without the Portal API entirely. Every file
+# keeps its MAST URL in provenance; nothing is fabricated.
+STPUBDATA_BASE = "https://s3.us-east-1.amazonaws.com/stpubdata"
+
+
+def _qlp_key_candidates(tic_id: int, sectors: Iterable[int] | None) -> list[str]:
+    """S3 object keys for QLP light curves of a TIC in known sectors.
+
+    QLP path layout: ``mast/hlsp/qlp/sXXXX/0000/0013/2614/6679/`` where the
+    three fixed-width groups come from the 16-digit zero-padded TIC id
+    (characters 4-8, 8-12, 12-16). Sector folders s0001..s0007+ exist per
+    mission progress. When `sectors` is None, probe every sector folder.
+    """
+    t16 = f"{tic_id:016d}"
+    d2, d3, d4 = t16[4:8], t16[8:12], t16[12:16]
+    if sectors:
+        secs = sorted(set(int(s) for s in sectors))
+    else:
+        secs = list(range(1, 8))          # QLP sectors 1..7 in this bucket
+    return [f"mast/hlsp/qlp/s{s:04d}/0000/{d2}/{d3}/{d4}/" for s in secs]
+
+
+def _s3_fetch(key: str) -> bytes | None:
+    """Download one object from stpubdata; None if it does not exist."""
+    import requests
+    url = f"{STPUBDATA_BASE}/{key}"
+    try:
+        r = requests.get(url, timeout=90)
+    except Exception as exc:  # noqa: BLE001
+        raise DownloadError(
+            "Network failure while retrieving the TESS light curve from the "
+            "AWS mirror.", detail=f"{type(exc).__name__}: {str(exc)[:160]}")
+    if r.status_code != 200:
+        return None
+    return r.content
+
+
+def _fetch_via_s3(tic_id: int, sectors: Iterable[int] | None) -> LightCurveBundle:
+    """Retrieve QLP (FFI-derived, 30-min cadence) light curves for one TIC
+    directly from the public MAST S3 mirror. Raises DownloadError/
+    DataNotFoundError with honest messages — no substitute data is made."""
+    from astropy.io import fits
+
+    want = set(int(s) for s in sectors) if sectors else None
+    curves: list[SectorCurve] = []
+    urls: list[str] = []
+    tried: list[str] = []
+    for key in _qlp_key_candidates(tic_id, sectors):
+        listing_key = key if key.endswith("/") else key + "/"
+        # List the folder to find the exact lc.fits file names.
+        import requests, re as _re
+        list_url = (f"{STPUBDATA_BASE}?list-type=2&prefix={listing_key}"
+                    f"&max-keys=8")
+        try:
+            resp = requests.get(list_url, timeout=60)
+        except Exception as exc:  # noqa: BLE001
+            raise DownloadError(
+                "Network failure while listing the TESS light-curve folder "
+                "on the AWS mirror.", detail=f"{type(exc).__name__}: {exc}")
+        if resp.status_code != 200:
+            raise DownloadError(
+                "The AWS mirror refused the light-curve listing "
+                f"(HTTP {resp.status_code}) for TIC {tic_id}.")
+        keys = _re.findall(r"<Key>([^<]+)</Key>", resp.text)
+        tried += keys[:4]
+        for k in keys:
+            if not k.endswith("llc.fits"):
+                continue
+            blob = _s3_fetch(k)
+            if blob is None:
+                continue
+            with fits.open(io.BytesIO(blob), memmap=False) as hdul:
+                # astropy returns a recarray; cast each column separately to
+                # avoid numpy's '>f4'→ little-endian record-cast TypeError.
+                btbl = hdul[1]
+                cols = [c.name.upper() for c in btbl.columns]
+                colmap = {c.name.upper(): c.name for c in btbl.columns}
+                def _col(name_variants):
+                    want = next((c for c in name_variants if c in cols), None)
+                    if want is None:
+                        return None
+                    raw = btbl.data[colmap[want]]          # big-endian >f4/>f8/>i4
+                    arr = raw.astype(np.float64 if ('FLUX' in want.upper()
+                                                    or want == 'TIME')
+                                     else np.int64, copy=False)
+                    return np.array(arr, dtype=arr.dtype)   # native endianness copy
+                time = _col(('TIME',))
+                flux = _col(('SAP_FLUX', 'KSPSAP_FLUX', 'FLUX_RAW', 'FLUX'))
+                err = _col(('SAP_FLUX_ERR', 'FLUX_ERR'))
+                qual = _col(('QUALITY',))
+                if qual is None:
+                    qual = np.zeros(0 if time is None else len(time), dtype=np.int64)
+            # Reconstruct the TESS sector from the key: s0023 → 23.
+            m = _re.search(r"s(\d{4})-", k)
+            sector = int(m.group(1)) if m else None
+            if want is not None and sector not in want:
+                continue
+            meta = {"ORIGIN": "QLP HLSP via AWS stpubdata",
+                    "INSTRUME": "TESS", "PROCVER": "QLP",
+                    "URL": f"{STPUBDATA_BASE}/{k}",
+                    "SECTOR": sector}
+            slim = dict(meta)
+            curves.append(SectorCurve(sector=sector, time=time, flux=flux,
+                                      flux_err=err, quality=qual,
+                                      meta=slim))
+            urls.append(f"{STPUBDATA_BASE}/{k}")
+    if not curves:
+        raise DownloadError(
+            f"No QLP light curves found for TIC {tic_id} on the AWS mirror.",
+            detail=f"checked keys: {tried[:3]}")
+    total = sum(len(c.time) for c in curves)
+    provenance = {
+        "target_id": f"TIC {tic_id}",
+        "tic_id": tic_id,
+        "data_source": "AWS stpubdata (QLP HLSP — FFI-derived, 30-min cadence)",
+        "query": {
+            "search_label": "qlp-s3-direct",
+            "search_kwargs": {"sector": list(want or [])},
+            "queried_at_utc": _time.strftime("%Y-%m-%dT%H:%M:%SZ",
+                                             _time.gmtime()),
+        },
+        "sectors": [c.sector for c in curves],
+        "n_sectors": len(curves),
+        "n_points": int(total),
+        "files": urls,
+        "mode": settings.MODE,
+        "retriever_version": __version__,
+        "from_cache": False,
+        "api_fallback": "direct-S3-body (primary MAST API unavailable)",
+    }
+    return _filter_sectors(_cap_sectors(LightCurveBundle(
+        target_id=f"TIC {tic_id}", sectors=curves,
+        provenance=provenance)), sectors)
+
+
+# --------------------------------------------------------------------------
 # MAST retrieval
 # --------------------------------------------------------------------------
 
 def _query_results(tic_id: int):
     import lightkurve as lk
+    from astroquery.mast import conf as _mast_conf
+
+    # When the Portal API is down it hangs for the full default timeout
+    # (600 s) per attempt × 4 author probes = ~40 min before any error.
+    # Cap the probe timeout so callers fail fast into the S3 fallback.
+    probe_timeout = min(int(getattr(getattr(settings, "api", None),
+                                   "query_timeout_s", 30) or 30), 60)
+    _mast_conf.timeout = probe_timeout
 
     target = f"TIC {tic_id}"
     attempts: list[tuple[str, dict]] = [
@@ -217,8 +368,20 @@ def fetch_tess_lightcurve(raw_tic: str | int,
 
     try:
         sr, label, kw = _query_results(tic_id)
-    except DownloadError:
-        raise
+    except DownloadError as primary_exc:
+        # The MAST Portal API is unreachable/503/404. If the AWS public
+        # mirror (stpubdata, registry.opendata.aws/tess) is reachable, fetch
+        # the SAME mission data (QLP 30-min FFI light curves) directly from
+        # S3 — same provenance discipline, no fabricated data.
+        try:
+            return _fetch_via_s3(tic_id, sectors)
+        except (DownloadError, DataNotFoundError) as fallback_exc:
+            raise DownloadError(
+                f"Failed to download TESS light curves for TIC {tic_id}: "
+                "both the MAST Portal API and the AWS stpubdata mirror are "
+                "unreachable right now.  Try again later.",
+                detail=(f"primary: {str(primary_exc)[:200]} | "
+                        f"fallback: {str(fallback_exc)[:200]}")) from fallback_exc
     if sr is None:
         raise DataNotFoundError(
             f"No TESS observations were found for TIC {tic_id} at MAST. "
