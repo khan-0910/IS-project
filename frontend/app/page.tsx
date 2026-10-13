@@ -79,6 +79,12 @@ export default function Home() {
   }, []);
 
   async function run() {
+    // With an empty input the button stays enabled and shows what to do instead
+    // of being a dead click.
+    if (!tic) {
+      setErr("Type a TIC id first — or open the example analysis link below.");
+      return;
+    }
     setErr(null);
     setBusy(true);
     try {
@@ -143,7 +149,7 @@ export default function Home() {
                 text="A TIC ID is the catalog number used to identify a star in NASA's TESS data."
                 more="Every TESS target has one. If you don't have a specific star in mind, open the example analysis below."
               />
-              <button onClick={run} disabled={busy || !tic} style={{ minWidth: 190 }}>
+              <button onClick={run} disabled={busy} style={{ minWidth: 190 }}>
                 {busy ? "SUBMITTING…" : "ANALYZE A STAR →"}
               </button>
             </div>
@@ -157,7 +163,7 @@ export default function Home() {
                 </Link>
               )}
             </div>
-            {err && <div className="note warn" style={{ marginTop: 10 }}>{err}</div>}
+            {err && <div className="note warn" role="alert" style={{ marginTop: 10 }}>{err}</div>}
           </div>
 
           {/* -------- 6 steps, each with optional WHY / HOW -------- */}

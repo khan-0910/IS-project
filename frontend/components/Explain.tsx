@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * WHY / HOW explanation system.
@@ -8,6 +8,7 @@ import { useState } from "react";
  * Renders one or two small buttons ([ WHY? ] [ HOW? ], optionally
  * [ TECHNICAL ]) that expand inline panels. Panels never open by default —
  * the explanation is there if the user asks, never forced on them.
+ * Clicking anywhere outside closes the panel, Escape closes it too.
  *
  * Used by every stage EXOVET explains in plain language (search, cleaning,
  * period validation, classification, uncertainty, fitting) plus the home and
@@ -34,6 +35,38 @@ export default function Explain({
 }) {
   const [panel, setPanel] = useState<"none" | "why" | "how">("none");
   const [techOpen, setTechOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const open = panel !== "none";
+
+  // close on any outside click / on Escape
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setPanel("none");
+        setTechOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown, true);
+    document.addEventListener("touchstart", onDown, true);
+    return () => {
+      document.removeEventListener("mousedown", onDown, true);
+      document.removeEventListener("touchstart", onDown, true);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setPanel("none");
+        setTechOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   if (!why && !how && !tech) return null;
 
@@ -69,7 +102,7 @@ export default function Explain({
   );
 
   return (
-    <div className={`explain${inline ? " inline" : ""}`}>
+    <div className={`explain${inline ? " inline" : ""}`} ref={rootRef}>
       {buttons}
       {panel === "why" && why && (
         <div className="explain-panel" role="note">

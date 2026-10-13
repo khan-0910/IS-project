@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * "WHAT IS THIS?" — one-line plain-language explanation, expandable.
  * Short answer always visible; deeper detail on demand. Never hides the science.
+ * Clicking anywhere outside closes the note; Escape does too.
  */
 export default function Help({
   term,
@@ -16,8 +17,34 @@ export default function Help({
   more?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown, true);
+    document.addEventListener("touchstart", onDown, true);
+    return () => {
+      document.removeEventListener("mousedown", onDown, true);
+      document.removeEventListener("touchstart", onDown, true);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
-    <span style={{ display: "inline-block", position: "relative" }}>
+    <span ref={rootRef} style={{ display: "inline-block", position: "relative" }}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
