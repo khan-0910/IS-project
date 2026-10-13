@@ -15,7 +15,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${grotesk.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <a className="skip-link" href="#content">
+          Skip to content
+        </a>
+        <div id="content">{children}</div>
+      </body>
     </html>
   );
 }

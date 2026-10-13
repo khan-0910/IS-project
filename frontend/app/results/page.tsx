@@ -15,9 +15,20 @@ const SHORT: Record<string, string> = {
   instrumental_systematic: "SYSTEMATIC",
 };
 
+const CLASSES: string[] = [
+  "all",
+  "planet_candidate",
+  "eclipsing_binary",
+  "grazing_eclipsing_binary",
+  "contamination_blend",
+  "instrumental_systematic",
+];
+
 export default function ResultsPage() {
   const [rows, setRows] = useState<ResultRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [cls, setCls] = useState<string>("all");
 
   useEffect(() => {
     fetch(`${API}/api/results?limit=200`)
@@ -25,6 +36,16 @@ export default function ResultsPage() {
       .then((d) => setRows(d.results ?? []))
       .catch((e) => setErr(`Could not load results (${e})`));
   }, []);
+
+  const filtered = (rows ?? []).filter((r) => {
+    if (cls !== "all" && r.predicted_class !== cls) return false;
+    const q = query.trim();
+    if (!q) return true;
+    const hay = `${r.target_id ?? ""} ${r.job_id} ${r.predicted_class ?? ""} ${
+      r.mode ?? ""
+    } ${r.verdict ?? ""}`.toLowerCase();
+    return hay.includes(q.toLowerCase());
+  });
 
   return (
     <div className="shell">
@@ -36,9 +57,46 @@ export default function ResultsPage() {
             <span className="sub">CLICK A ROW TO OPEN THE FULL REPORT — NO RERUN NEEDED</span>
           </div>
           {err && <div className="note warn">{err}</div>}
+          {rows && rows.length > 0 && (
+            <div className="filterline">
+              <input
+                style={{ maxWidth: 320, flex: 1, minWidth: 160 }}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Filter by target id, class, mode…"
+                aria-label="Filter stored analyses"
+              />
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {CLASSES.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`chip${cls === c ? " active" : ""}`}
+                    style={
+                      cls === c
+                        ? { color: "var(--text)", borderColor: "var(--accent)" }
+                        : undefined
+                    }
+                    aria-pressed={cls === c}
+                    onClick={() => setCls(c)}
+                  >
+                    {c === "all" ? "ALL" : (SHORT[c] ?? c)}
+                  </button>
+                ))}
+              </div>
+              <span className="label" style={{ color: "var(--muted)" }}>
+                SHOWING {filtered.length}/{rows.length}
+              </span>
+            </div>
+          )}
           {rows === null && !err && (
             <div className="note" style={{ padding: "24px 0" }}>
               LOADING STORED REPORTS…
+            </div>
+          )}
+          {rows && rows.length > 0 && filtered.length === 0 && (
+            <div className="note" style={{ padding: "24px 0" }}>
+              NO RESULTS MATCH THE CURRENT FILTER.
             </div>
           )}
           {rows && rows.length === 0 && (
@@ -46,7 +104,7 @@ export default function ResultsPage() {
               NO ANALYSES YET — RUN ONE FROM THE ANALYZE PAGE.
             </div>
           )}
-          {rows && rows.length > 0 && (
+          {rows && rows.length > 0 && filtered.length > 0 && (
             <table className="vtable">
               <thead>
                 <tr>
@@ -61,7 +119,7 @@ export default function ResultsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {filtered.map((r) => (
                   <tr key={r.job_id}>
                     <td className="strong">{r.target_id ?? r.job_id}</td>
                     <td>{r.generated_at?.slice(0, 16).replace("T", " ") ?? "—"}</td>
