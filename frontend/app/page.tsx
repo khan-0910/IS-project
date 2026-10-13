@@ -15,37 +15,37 @@ const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const STEPS = [
   {
     t: "OBSERVE",
-    d: "We start with measurements of a star's brightness.",
+    d: "Measure how bright the star is over time.",
     why: "A planet crossing in front of its star dims it very slightly, once per orbit.",
     how: "EXOVET pulls real photometry of a TESS target from the MAST archive via lightkurve.",
   },
   {
     t: "CLEAN",
-    d: "We remove long-term trends and unwanted noise.",
+    d: "Remove slow trends and unwanted noise.",
     why: "Slow instrument drifts would otherwise bury the tiny transit dips.",
     how: "A robust biweight filter (wotan) removes slow trends while preserving transit shapes; real dips are never clipped.",
   },
   {
     t: "SEARCH",
-    d: "We look for repeating dips that could be caused by a transit.",
+    d: "Look for repeating dips that could be a transit.",
     why: "A real planet repeats its dip once every orbit — random noise does not.",
     how: "Transit Least Squares tests many possible orbital periods and looks for signals shaped like planetary transits.",
   },
   {
     t: "CHECK",
-    d: "We test whether the detected pattern is actually consistent.",
+    d: "Test whether the pattern is physically consistent.",
     why: "A false period can make unrelated dips appear to line up; TLS sometimes locks onto a fraction of the true period.",
     how: "EXOVET checks event realization (that predicted dips are actually observed) and compares harmonic multiples.",
   },
   {
     t: "CLASSIFY",
-    d: "AI compares the signal with known types of astronomical events.",
+    d: "Compare the signal with known event types.",
     why: "Not every repeating dip is caused by a planet — stars and artifacts can mimic one.",
     how: "A machine-learning model sorts the signal into five physical scenarios and reports its confidence.",
   },
   {
     t: "EXPLAIN",
-    d: "EXOVET shows the evidence, uncertainty, and fitted transit.",
+    d: "Show the evidence, the uncertainty, and the fit.",
     why: "A trustworthy result shows its work — including when it is unsure.",
     how: "Ranked probabilities, attention diagnostics and a physical transit fit are in the full report; for Full Analysis the transit model is fitted with MCMC.",
   },
@@ -121,9 +121,8 @@ export default function Home() {
             starlight.
           </p>
           <p className="note" style={{ marginTop: 12, maxWidth: "48ch" }}>
-            EXOVET takes measurements of a star's brightness, looks for tiny
-            repeating dips, and uses AI to determine what might have caused
-            them.
+            EXOVET looks at a star's brightness, finds tiny repeating dips,
+            and uses AI to tell you what most likely caused them.
           </p>
 
           {/* -------- start here -------- */}
@@ -216,8 +215,6 @@ export default function Home() {
           </div>
 
           <div className="foot">
-            <span>EXOVET-SYS-01</span>
-            <span>BACKEND :8000</span>
             <a href="/api/docs" target="_blank">API SCHEMA ↗</a>
             <span style={{ marginLeft: "auto" }}>
               REAL DATA ONLY · EVERY NUMBER TRACEABLE

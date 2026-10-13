@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const NAV = [
@@ -12,6 +11,7 @@ const NAV = [
   { href: "/about", label: "ABOUT" },
 ];
 
+/** Minimal top bar: wordmark, nav, status. All instrument trivia removed. */
 export default function TopBar({
   meta,
   status,
@@ -19,26 +19,14 @@ export default function TopBar({
   meta?: { k: string; v: string }[];
   status?: "ONLINE" | "RUNNING" | "IDLE";
 }) {
-  const [utc, setUtc] = useState("--:--:--");
   const pathname = usePathname() ?? "/";
-  useEffect(() => {
-    const tick = () =>
-      setUtc(
-        new Date().toISOString().slice(11, 19) + "Z"
-      );
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
   const st = status ?? "ONLINE";
+
   return (
     <div className="topbar">
       <Link href="/" className="wordmark">
         EXO<span>VET</span>
       </Link>
-      <div className="sep" />
-      <span className="label m">EXOPLANET VETTING INSTRUMENT · TESS</span>
       <div className="sep" />
       <nav className="mainnav" aria-label="Primary">
         {NAV.map((n) => (
@@ -67,7 +55,6 @@ export default function TopBar({
           />
           {st}
         </span>
-        <span>{utc}</span>
       </div>
     </div>
   );
