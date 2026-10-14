@@ -1,27 +1,27 @@
 /* EXOVET — scientific instrument interface.
-   Palette: deep magenta base, cyan boxes, fluorescent yellow action accent,
-   white text, mint data series. Flat, no gradients, no glow, no shadows.
+   Palette: deep olive base, brown & tan boxes, warm gold action accent,
+   cream text, sage data series. Flat, no gradients, no glow, no shadows.
    Semantics unchanged: accent = action, teal = data series,
    red = failure, warn = caution. */
 
 :root {
-  --bg: #4a0f3d;               /* deep magenta — page background */
-  --panel: #0f4c52;            /* dark cyan — top bar, rail, right pane */
-  --panel-2: #0b3e44;          /* deeper cyan (inputs) */
-  --panel-3: #145c63;          /* cyan (popover surfaces) */
-  --line: #3f2a63;             /* violet-magenta rule lines */
-  --line-strong: #6a3d84;
-  --text: #f4f4fc;             /* near-white — primary text */
-  --muted: #c6aed4;            /* pale lilac */
-  --faint: #9d84ad;
-  --accent: #e8ff45;           /* fluorescent yellow — action, verdicts */
-  --accent-dim: #b8cc17;
-  --accent-faint: rgba(232, 255, 69, 0.10);
-  --warn: #ffb03a;             /* amber — warnings only */
-  --teal: #45ffe0;             /* neon cyan — primary data series */
-  --blue: #7db8ff;             /* sky blue — secondary data series */
-  --red: #ff5f85;              /* hot rose — failure, instability */
-  --ok: #45ffe0;               /* semantic success (same neon cyan) */
+  --bg: #3f4527;               /* deep olive — page background */
+  --panel: #4f4629;            /* brown — top bar, rail, right pane */
+  --panel-2: #463e21;          /* darker brown */
+  --panel-3: #5b5132;          /* tan (popover surfaces) */
+  --line: #5c5434;             /* olive rule lines */
+  --line-strong: #7a7048;
+  --text: #f1ead6;             /* warm cream — primary text */
+  --muted: #cfc4a4;            /* tan */
+  --faint: #a89e80;
+  --accent: #e3b25b;           /* gold-amber — action, selection, verdicts */
+  --accent-dim: #b98f3f;
+  --accent-faint: rgba(227, 178, 91, 0.10);
+  --warn: #d9964a;             /* caramel — warnings only */
+  --teal: #9ad0a8;             /* sage — primary data series */
+  --blue: #8fa8c9;             /* slate blue — secondary data series */
+  --red: #e07a8a;              /* rose — failure, instability */
+  --ok: #9ad0a8;               /* semantic success (same sage) */
   --radius: 2px;
 }
 
@@ -185,7 +185,7 @@ a {
 }
 
 ::selection {
-  background: rgba(232, 255, 69, 0.30);
+  background: rgba(227, 178, 91, 0.28);
 }
 
 .mono,
@@ -526,7 +526,7 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="b
 
 button {
   background: var(--accent);
-  color: #262303;
+  color: #1d1806;
   border: 0;
   border-radius: var(--radius);
   padding: 12px 24px;
@@ -539,7 +539,7 @@ button {
 }
 
 button:hover {
-  background: #f2ff7a;
+  background: #edc47c;
 }
 
 button:disabled {
@@ -706,7 +706,7 @@ button:disabled {
 }
 
 .chip.red {
-  border-color: rgba(255, 95, 133, 0.45);
+  border-color: rgba(224, 122, 138, 0.45);
   color: var(--red);
 }
 
@@ -1048,14 +1048,14 @@ textarea:focus {
 
 .pvchip.ok {
   color: var(--ok);
-  border-color: rgba(69, 255, 224, 0.4);
-  background: rgba(69, 255, 224, 0.07);
+  border-color: rgba(154, 208, 168, 0.4);
+  background: rgba(154, 208, 168, 0.07);
 }
 
 .pvchip.warn {
   color: var(--warn);
-  border-color: rgba(255, 176, 58, 0.5);
-  background: rgba(255, 176, 58, 0.07);
+  border-color: rgba(217, 150, 74, 0.5);
+  background: rgba(217, 150, 74, 0.07);
 }
 
 /* warnings strip — INFO / WARNING / ERROR rows */
@@ -1085,12 +1085,12 @@ textarea:focus {
 
 .warnrow.warn .sev {
   color: var(--warn);
-  border-color: rgba(255, 176, 58, 0.5);
+  border-color: rgba(217, 150, 74, 0.5);
 }
 
 .warnrow.error .sev {
   color: var(--red);
-  border-color: rgba(255, 95, 133, 0.45);
+  border-color: rgba(224, 122, 138, 0.45);
 }
 
 .warnrow .wtxt {
@@ -1237,7 +1237,7 @@ input:focus-visible {
   left: -9999px;
   top: 0;
   background: var(--accent);
-  color: #262303;
+  color: #1d1806;
   padding: 8px 14px;
   z-index: 999;
   border-radius: 0 0 6px 0;
