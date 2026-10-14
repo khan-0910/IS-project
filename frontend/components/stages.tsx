@@ -137,7 +137,7 @@ export function OverviewStage({ report: rep }: StageProps) {
           </div>
           <SciChart
             height={250}
-            series={s?.detrended ? [{ points: s.detrended as Pt[], color: "var(--teal)", width: 1, fill: "rgba(61,242,182,0.06)" }] : []}
+            series={s?.detrended ? [{ points: s.detrended as Pt[], color: "var(--teal)", width: 1, fill: "rgba(11,166,160,0.08)" }] : []}
             xLabel="TIME · BTJD D"
             yLabel="NORMALIZED FLUX"
           />
@@ -207,7 +207,7 @@ export function DetectionStage({ report: rep }: StageProps) {
           <SciChart
             height={330}
             logX
-            series={s?.periodogram ? [{ points: s.periodogram as Pt[], color: "var(--teal)", width: 0.9, fill: "rgba(61,242,182,0.05)" }] : []}
+            series={s?.periodogram ? [{ points: s.periodogram as Pt[], color: "var(--teal)", width: 0.9, fill: "rgba(11,166,160,0.07)" }] : []}
             markers={s?.periodogram_marker?.period ? [{ x: s.periodogram_marker.period, label: `P* ${s.periodogram_marker.period.toFixed(4)} d` }] : []}
             xLabel="PERIOD · DAYS (LOG)"
             yLabel="TLS POWER"
