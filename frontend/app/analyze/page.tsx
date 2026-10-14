@@ -750,7 +750,7 @@ function Workspace() {
               ) : (
                 <SciChart
                   height={300}
-                  series={lcSeries ? [{ points: lcSeries as Pt[], color: "var(--teal)", width: 1, fill: "rgba(11,166,160,0.08)" }] : []}
+                  series={lcSeries ? [{ points: lcSeries as Pt[], color: "var(--teal)", width: 1, fill: "rgba(154,208,168,0.09)" }] : []}
                   xLabel="TIME · BTJD DAYS"
                   yLabel="NORMALIZED FLUX"
                   emptyText="NO SERIES IN THIS REPORT"
@@ -797,7 +797,7 @@ function Workspace() {
                     <SciChart
                       height={280}
                       logX
-                      series={s?.periodogram ? [{ points: s.periodogram as Pt[], color: "var(--teal)", width: 0.9, fill: "rgba(11,166,160,0.07)" }] : []}
+                      series={s?.periodogram ? [{ points: s.periodogram as Pt[], color: "var(--teal)", width: 0.9, fill: "rgba(154,208,168,0.08)" }] : []}
                       markers={s?.periodogram_marker?.period ? [{ x: s.periodogram_marker.period, label: `P* ${s.periodogram_marker.period.toFixed(4)} d` }] : []}
                       xLabel="PERIOD · DAYS (LOG)"
                       yLabel="TLS POWER"
