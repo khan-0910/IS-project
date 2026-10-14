@@ -198,7 +198,7 @@ export default function Home() {
                 height={400}
                 series={
                   curve
-                    ? [{ points: curve, color: "var(--teal)", width: 1.1, animate: true, fill: "rgba(154,208,168,0.10)" }]
+                    ? [{ points: curve, color: "var(--teal)", width: 1.1, animate: true, fill: "rgba(69,255,224,0.10)" }]
                     : []
                 }
                 xLabel="TIME · BTJD DAYS"
