@@ -17,8 +17,12 @@ passes) ─▶ attention rollout ─▶ batman+emcee transit fit ─▶ report J
 
 - **macOS / Linux**: `bash scripts/mac_setup.sh` (one-time), then
   `bash scripts/serve.sh` — full guide in [docs/MAC_SETUP.md](docs/MAC_SETUP.md).
-- **Windows**: Python runs inside WSL Ubuntu (see docs/SETUP_STATUS.md); the
-  repo itself is unchanged.
+- **Windows (native, repo itself is the same)**: clone, then
+  `powershell -ExecutionPolicy Bypass -File scripts\win_setup.ps1` (one-time)
+  and `powershell -ExecutionPolicy Bypass -File scripts\win_run.ps1` —
+  full guide in [docs/WINDOWS_SETUP.md](docs/WINDOWS_SETUP.md). WSL
+  (`scripts/wsl_py.sh` + [docs/SETUP_STATUS.md](docs/SETUP_STATUS.md)) remains
+  as a fallback only.
 
 ## The five classes
 
@@ -91,10 +95,14 @@ data/
 
 ## Running
 
-All Python runs in **WSL** (Smart App Control on the Windows host blocks
-scipy/numba DLLs). From the repo root in Git Bash:
+All Python can run **natively** on Windows (64-bit CPython 3.11–3.13; see
+[docs/WINDOWS_SETUP.md](docs/WINDOWS_SETUP.md)); a WSL fallback remains for
+hosts where Smart App Control blocks wheel binaries.
 
 ```bash
+# (from Git Bash on Windows, or run the PowerShell equivalents instead —
+#  see docs/WINDOWS_SETUP.md for native `scripts\win_*.ps1` commands)
+
 # build/extend the labeled dataset (resumable; quotas in the script)
 MSYS_NO_PATHCONV=1 wsl -d Ubuntu -u root -- bash scripts/wsl_py.sh \
     scripts/build_dataset_batch.py --n 20 --workers 6 --tls-threads 2
@@ -107,10 +115,8 @@ MSYS_NO_PATHCONV=1 wsl -d Ubuntu -u root -- bash scripts/wsl_py.sh \
 MSYS_NO_PATHCONV=1 wsl -d Ubuntu -u root -- bash scripts/wsl_py.sh \
     scripts/train_transformer.py
 
-# tests (15 unit/contract tests; no network needed except none)
-MSYS_NO_PATHCONV=1 wsl -d Ubuntu -u root -- bash -c \
-    "cd /mnt/c/Users/khana/OneDrive/Desktop/'Intelligent Systems Project' && \
-     PYTHONPATH=backend /root/exovet-venv/bin/python -m pytest"
+# tests (unit/contract tests; no network needed)
+MSYS_NO_PATHCONV=1 wsl -d Ubuntu -u root -- bash scripts/wsl_py.sh -m pytest
 
 # backend API on :8000
 MSYS_NO_PATHCONV=1 wsl -d Ubuntu -u root -- bash scripts/wsl_py.sh \
@@ -119,6 +125,10 @@ MSYS_NO_PATHCONV=1 wsl -d Ubuntu -u root -- bash scripts/wsl_py.sh \
 # frontend on :3000
 cd frontend && npm install && npm run dev
 ```
+
+(Native-Windows commands without WSL: `.venv\Scripts\python -m pytest` from
+the repo root with `$env:PYTHONPATH = "backend"`; `cd backend` then
+`..\.venv\Scripts\python -m uvicorn exovet.api.app:app --host 0.0.0.0 --port 8000`.)
 
 Environment knobs: `EXOVET_ROOT`, `EXOVET_DATA`, `EXOVET_MODE=full|demo`.
 

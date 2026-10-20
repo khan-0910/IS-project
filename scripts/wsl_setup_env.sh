@@ -3,7 +3,7 @@
 # Usage: wsl -d Ubuntu -u root -- bash "<repo>/scripts/wsl_setup_env.sh"
 set -euo pipefail
 
-REPO="${1:-/mnt/c/Users/khana/OneDrive/Desktop/Intelligent Systems Project}"
+REPO="${1:-${EXOVET_WSL_REPO:-$(cd "$(dirname "$0")/.." && pwd)}}"
 VENV=/root/exovet-venv
 
 echo "== 1/4 uv =="

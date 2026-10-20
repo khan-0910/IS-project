@@ -2,7 +2,7 @@
 # Install/refresh the exovet package (editable) into the EXOVET venv.
 #   Usage: MSYS_NO_PATHCONV=1 wsl -d Ubuntu -u root -- bash "<repo>/scripts/wsl_install.sh"
 set -euo pipefail
-REPO="/mnt/c/Users/khana/OneDrive/Desktop/Intelligent Systems Project"
+REPO="${EXOVET_WSL_REPO:-$(cd "$(dirname "$0")/.." && pwd)}"
 UV="${HOME}/.local/bin/uv"
 export PATH="${HOME}/.local/bin:${PATH}"
 cd "$REPO/backend"
