@@ -119,6 +119,15 @@ def report_markdown_text(rep: dict, job_id: str = "") -> str:
         if (cls.get("flags") or {}).get("ambiguous"):
             a("- **AMBIGUOUS RESULT** — the model did not strongly separate the "
               "leading classes; treat the percentages as ordinal hints.")
+        ood = cls.get("ood") or {}
+        if ood.get("flag"):
+            feats = ", ".join(f"{f['name']} = {_fmt(f['value'], 3)} (z = {f['z']})"
+                              for f in ood.get("features", []))
+            a(f"- **OUT OF DISTRIBUTION** — outside the training range: {feats}. "
+              "The class probabilities are an extrapolation.")
+        if cls.get("excluded_inputs"):
+            a(f"- Not used by the classifier (catalog-selection features): "
+              f"{', '.join(cls['excluded_inputs'])}")
         a("")
         a("| rank | class | probability | ± std |")
         a("|---|---|---|---|")

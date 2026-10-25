@@ -131,6 +131,30 @@ def make_splits(y: np.ndarray, target_id: np.ndarray, seed: int = SPLIT_SEED,
     return splits
 
 
+def splits_from_targets(y: np.ndarray, target_id: np.ndarray,
+                        frozen: dict) -> dict:
+    """Rebuild row-index splits from a recorded target-id assignment.
+
+    Targets absent from the record (e.g. added to the dataset later) go to
+    train only, never to val/test, so the held-out sets cannot grow silently.
+    """
+    where = {}
+    for name in ("train", "val", "test"):
+        for t in frozen.get(name, []):
+            where[int(t)] = name
+    parts: dict[str, list[int]] = {"train": [], "val": [], "test": []}
+    for i, t in enumerate(target_id.tolist()):
+        parts[where.get(int(t), "train")].append(i)
+    splits = {name: np.array(sorted(rows), dtype=np.int64)
+              for name, rows in parts.items()}
+    splits.update({"seed": frozen.get("seed", SPLIT_SEED), "frozen": True,
+                   "n_targets": int(len(np.unique(target_id)))})
+    for name in ("train", "val", "test"):
+        counts = np.bincount(y[splits[name]], minlength=len(settings.CLASSES))
+        splits[f"{name}_class_counts"] = counts.tolist()
+    return splits
+
+
 def save_splits(splits: dict, path: Path) -> None:
     serializable = {k: (v.tolist() if isinstance(v, np.ndarray) else v)
                     for k, v in splits.items()}

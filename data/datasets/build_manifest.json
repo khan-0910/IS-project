@@ -49,6 +49,10 @@
    "geometry_repair_v2": {
     "v_shape": NaN,
     "secondary_ratio": 0.7769054059100587
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.7769054059100587
    }
   },
   "470709084": {
@@ -94,9 +98,13 @@
    "sample_file": "t470709084.npz",
    "scalars_finite_frac": 0.9090909090909091,
    "t_total": 36.21,
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.45 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.0019077155588157547
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.45272898673741907,
     "secondary_ratio": 0.0019077155588157547
    }
   },
@@ -146,12 +154,16 @@
    "geometry_repair_v2": {
     "v_shape": 0.2745098039215686,
     "secondary_ratio": 0.0345407162214716
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.09129234113173672,
+    "secondary_ratio": 0.0345407162214716
    }
   },
   "451599528": {
    "target_id": 451599528,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-1104.01",
    "label_source": "exofop:TESS Disposition",
@@ -198,12 +210,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.45916207054204466
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.45916207054204466
    }
   },
   "29959761": {
    "target_id": 29959761,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-2340.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -248,6 +264,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.02710147123583753
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.4133515291252589,
     "secondary_ratio": 0.02710147123583753
    }
   },
@@ -296,16 +316,20 @@
    "sample_file": "t289988797.npz",
    "scalars_finite_frac": 0.9393939393939394,
    "t_total": 33.54,
-   "label_note": "grazing subtype: v_shape=0.71 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.60 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 0.7142857142857143,
+    "secondary_ratio": 0.016669823848564136
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.6004018939735106,
     "secondary_ratio": 0.016669823848564136
    }
   },
   "131979339": {
    "target_id": 131979339,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-586.01",
    "label_source": "exofop:TESS Disposition",
@@ -350,6 +374,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.7678717199227328
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": -0.7678717199227328
    }
   },
@@ -399,16 +427,20 @@
    "sample_file": "t30312676.npz",
    "scalars_finite_frac": 0.7878787878787878,
    "t_total": 290.34,
-   "label_note": "grazing subtype: v_shape=0.76 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.70 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 0.7575757575757577,
+    "secondary_ratio": 0.1264923616417916
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.6996988148803963,
     "secondary_ratio": 0.1264923616417916
    }
   },
   "300013921": {
    "target_id": 300013921,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-793.01",
    "label_source": "exofop:TESS Disposition",
@@ -455,12 +487,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.1738808278690461
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.1738808278690461
    }
   },
   "184679932": {
    "target_id": 184679932,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-1645.01",
    "label_source": "exofop:TESS Disposition",
@@ -505,6 +541,10 @@
    "label_note": "grazing subtype: v_shape=0.49 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 0.48888888888888876,
+    "secondary_ratio": 0.33909250301196864
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.034247111015302346,
     "secondary_ratio": 0.33909250301196864
    }
   },
@@ -554,16 +594,20 @@
    "sample_file": "t38603673.npz",
    "scalars_finite_frac": 1.0,
    "t_total": 70.71,
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.99 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.22950354225196942
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.9936901716522587,
     "secondary_ratio": 0.22950354225196942
    }
   },
   "224313733": {
    "target_id": 224313733,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-1856.01",
    "label_source": "exofop:TESS Disposition",
@@ -611,12 +655,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.01963030332536972
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.15441288223067087,
+    "secondary_ratio": -0.01963030332536972
    }
   },
   "324609476": {
    "target_id": 324609476,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-5041.01",
    "label_source": "exofop:TESS Disposition",
@@ -662,12 +710,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.03609781048889332
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.03609781048889332
    }
   },
   "233569098": {
    "target_id": 233569098,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-2148.01",
    "label_source": "exofop:TESS Disposition",
@@ -714,12 +766,16 @@
    "geometry_repair_v2": {
     "v_shape": 0.6666666666666666,
     "secondary_ratio": -0.05129731337155346
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.37609748173863783,
+    "secondary_ratio": -0.05129731337155346
    }
   },
   "316937670": {
    "target_id": 316937670,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-221.01",
    "label_source": "exofop:TESS Disposition",
@@ -765,6 +821,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.024273196513143
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": -0.024273196513143
    }
   },
@@ -814,6 +874,10 @@
    "geometry_repair_v2": {
     "v_shape": 0.125,
     "secondary_ratio": 0.05526086645959372
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.11711661093318293,
+    "secondary_ratio": 0.05526086645959372
    }
   },
   "341419787": {
@@ -862,9 +926,13 @@
    "sample_file": "t341419787.npz",
    "scalars_finite_frac": 0.9696969696969697,
    "t_total": 137.59,
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.60 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.060817832634772404
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.5952713412364745,
     "secondary_ratio": 0.060817832634772404
    }
   },
@@ -914,9 +982,13 @@
    "sample_file": "t297153209.npz",
    "scalars_finite_frac": 0.9696969696969697,
    "t_total": 62.45,
-   "label_note": "grazing subtype: v_shape=0.53 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.54 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 0.5333333333333333,
+    "secondary_ratio": -0.024536841633578124
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.5397199882104625,
     "secondary_ratio": -0.024536841633578124
    }
   },
@@ -965,9 +1037,13 @@
    "sample_file": "t254629854.npz",
    "scalars_finite_frac": 0.9696969696969697,
    "t_total": 128.52,
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.52 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.08659389712572248
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.5226808435593963,
     "secondary_ratio": 0.08659389712572248
    }
   },
@@ -1020,6 +1096,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.33285034780346456
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.33285034780346456
    }
   },
   "229976631": {
@@ -1070,6 +1150,10 @@
    "t_total": 189.66,
    "geometry_repair_v2": {
     "v_shape": 0.7999999999999999,
+    "secondary_ratio": -0.060423001157631995
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.020930422764587602,
     "secondary_ratio": -0.060423001157631995
    }
   },
@@ -1122,6 +1206,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.31586009812282606
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.31586009812282606
    }
   },
   "200807066": {
@@ -1172,6 +1260,10 @@
    "t_total": 67.13,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.43632356957505886
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.43632356957505886
    }
   },
@@ -1224,6 +1316,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.14442028811065175
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.14442028811065175
    }
   },
   "68035558": {
@@ -1275,6 +1371,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.982605197075315
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.982605197075315
    }
   },
   "129991079": {
@@ -1324,6 +1424,10 @@
    "t_total": 40.46,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.42653540993332767
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.32560084075756096,
     "secondary_ratio": -0.42653540993332767
    }
   },
@@ -1376,6 +1480,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": NaN
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": NaN
    }
   },
   "344926234": {
@@ -1427,6 +1535,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.02536464688681512
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.02536464688681512
    }
   },
   "365690646": {
@@ -1476,6 +1588,10 @@
    "t_total": 41.78,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.07674187355572777
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": -0.07674187355572777
    }
   },
@@ -1529,6 +1645,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.1276563451720111
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.1276563451720111
    }
   },
   "123958679": {
@@ -1578,6 +1698,10 @@
    "t_total": 38.62,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.16826224083746097
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.16826224083746097
    }
   },
@@ -1630,6 +1754,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.40076666028584484
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.40076666028584484
    }
   },
   "153949511": {
@@ -1680,6 +1808,10 @@
    "t_total": 79.09,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.06669362830346925
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.1665721554569831,
     "secondary_ratio": 0.06669362830346925
    }
   },
@@ -1732,6 +1864,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.7763025770497725
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.7763025770497725
    }
   },
   "458589703": {
@@ -1783,6 +1919,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.4871886131250097
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.4871886131250097
    }
   },
   "10974783": {
@@ -1832,6 +1972,10 @@
    "t_total": 57.5,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.13022235810761237
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.7333061181349438,
     "secondary_ratio": 0.13022235810761237
    }
   },
@@ -1885,6 +2029,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.2685253458256739
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.2685253458256739
    }
   },
   "459903429": {
@@ -1937,6 +2085,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.23922059347859212
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.23922059347859212
    }
   },
   "402740809": {
@@ -1986,6 +2138,10 @@
    "t_total": 39.29,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.4080753447094318
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.4080753447094318
    }
   },
@@ -2039,6 +2195,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.20410230880189545
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.20410230880189545
    }
   },
   "2760710": {
@@ -2088,6 +2248,10 @@
    "t_total": 71.83,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.1569284972629215
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.9834972459479316,
     "secondary_ratio": -0.1569284972629215
    }
   },
@@ -2141,6 +2305,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.10068565864614015
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.10068565864614015
    }
   },
   "233831759": {
@@ -2192,6 +2360,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.04973367077153458
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.740242443344954,
+    "secondary_ratio": 0.04973367077153458
    }
   },
   "286132427": {
@@ -2242,6 +2414,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.17334978442920396
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.17334978442920396
    }
   },
   "347011522": {
@@ -2291,6 +2467,10 @@
    "t_total": 57.74,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.20320726287502758
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.25655735576324634,
     "secondary_ratio": 0.20320726287502758
    }
   },
@@ -2343,12 +2523,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.058953063435159374
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.058953063435159374
    }
   },
   "176831592": {
    "target_id": 176831592,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-463.01",
    "label_source": "exofop:TESS Disposition",
@@ -2393,6 +2577,10 @@
    "label_note": "grazing subtype: v_shape=0.92 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 0.9166666666666666,
+    "secondary_ratio": -0.03837671013974086
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.3123755683941391,
     "secondary_ratio": -0.03837671013974086
    }
   },
@@ -2446,6 +2634,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.09986325309724266
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.09986325309724266
    }
   },
   "461538935": {
@@ -2494,9 +2686,13 @@
    "sample_file": "t461538935.npz",
    "scalars_finite_frac": 0.9696969696969697,
    "t_total": 86.63,
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.98 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.0746341210069988
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.9785657929879966,
     "secondary_ratio": -0.0746341210069988
    }
   },
@@ -2547,6 +2743,10 @@
    "t_total": 46.88,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 1.0151876851015702
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 1.0151876851015702
    }
   },
@@ -2599,6 +2799,10 @@
    "geometry_repair_v2": {
     "v_shape": 0.4242424242424243,
     "secondary_ratio": -0.0024153718934312894
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.3865257801995054,
+    "secondary_ratio": -0.0024153718934312894
    }
   },
   "390048041": {
@@ -2649,6 +2853,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.10354635910545945
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.35339431536623644,
+    "secondary_ratio": 0.10354635910545945
    }
   },
   "249067445": {
@@ -2694,9 +2902,13 @@
    "sample_file": "t249067445.npz",
    "scalars_finite_frac": 0.9696969696969697,
    "t_total": 44.54,
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.06729410864593714
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.998624702108788,
     "secondary_ratio": 0.06729410864593714
    }
   },
@@ -2749,6 +2961,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.72411120453971
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.72411120453971
    }
   },
   "457939414": {
@@ -2797,9 +3013,13 @@
    "sample_file": "t457939414.npz",
    "scalars_finite_frac": 0.9696969696969697,
    "t_total": 214.25,
-   "label_note": "grazing subtype: v_shape=0.53 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.46 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 0.5333333333333333,
+    "secondary_ratio": 0.4733537257868251
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.457950475879718,
     "secondary_ratio": 0.4733537257868251
    }
   },
@@ -2852,6 +3072,10 @@
    "geometry_repair_v2": {
     "v_shape": 0.12121212121212117,
     "secondary_ratio": -0.010622369567508871
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.06835404193048016,
+    "secondary_ratio": -0.010622369567508871
    }
   },
   "376740324": {
@@ -2899,6 +3123,10 @@
    "t_total": 52.32,
    "geometry_repair_v2": {
     "v_shape": 0.08333333333333333,
+    "secondary_ratio": 0.03548685608661581
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.09593847777602542,
     "secondary_ratio": 0.03548685608661581
    }
   },
@@ -2952,12 +3180,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.5086881807496711
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.5086881807496711
    }
   },
   "374919956": {
    "target_id": 374919956,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-6042.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -3000,6 +3232,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.02161755941651804
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.44951193503567993,
     "secondary_ratio": 0.02161755941651804
    }
   },
@@ -3052,6 +3288,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.6549999111399459
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.6549999111399459
    }
   },
   "350995812": {
@@ -3103,6 +3343,10 @@
    "geometry_repair_v2": {
     "v_shape": 0.3478260869565218,
     "secondary_ratio": -0.9861517262264359
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.3279027654978195,
+    "secondary_ratio": -0.9861517262264359
    }
   },
   "452972453": {
@@ -3153,12 +3397,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.04057908622271278
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.9857701077447301,
+    "secondary_ratio": -0.04057908622271278
    }
   },
   "74482749": {
    "target_id": 74482749,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-584.01",
    "label_source": "exofop:TESS Disposition",
@@ -3201,6 +3449,10 @@
    "label_note": "grazing subtype: v_shape=0.45 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 0.4545454545454546,
+    "secondary_ratio": -0.08505234721692786
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.41953453189290846,
     "secondary_ratio": -0.08505234721692786
    }
   },
@@ -3253,12 +3505,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.5000182479294277
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.5000182479294277
    }
   },
   "49967354": {
    "target_id": 49967354,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-2164.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -3303,6 +3559,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.009404584680356164
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.009404584680356164
    }
   },
@@ -3353,6 +3613,10 @@
    "t_total": 85.07,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.35567908788634794
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.35567908788634794
    }
   },
@@ -3405,12 +3669,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.07136741806952308
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.07136741806952308
    }
   },
   "407146538": {
    "target_id": 407146538,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-5055.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -3456,6 +3724,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.07831282548094852
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.07831282548094852
    }
   },
@@ -3505,6 +3777,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.010520494390309953
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.11079790179502684,
+    "secondary_ratio": -0.010520494390309953
    }
   },
   "343648136": {
@@ -3552,6 +3828,10 @@
    "t_total": 52.13,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.06115319387171989
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.18225464061806865,
     "secondary_ratio": 0.06115319387171989
    }
   },
@@ -3601,12 +3881,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.13353004439119465
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.13353004439119465
    }
   },
   "219821826": {
    "target_id": 219821826,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-2258.01",
    "label_source": "exofop:TESS Disposition",
@@ -3652,6 +3936,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.06347518464557192
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.25832499823667293,
     "secondary_ratio": -0.06347518464557192
    }
   },
@@ -3703,6 +3991,10 @@
    "geometry_repair_v2": {
     "v_shape": 0.9,
     "secondary_ratio": 0.03222522352093571
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.05749510798493218,
+    "secondary_ratio": 0.03222522352093571
    }
   },
   "19451711": {
@@ -3752,6 +4044,10 @@
    "t_total": 65.16,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.7271521334356592
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.49514462334558784,
     "secondary_ratio": 0.7271521334356592
    }
   },
@@ -3803,12 +4099,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.06823435250864954
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.2809761718185418,
+    "secondary_ratio": -0.06823435250864954
    }
   },
   "66356824": {
    "target_id": 66356824,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-315.01",
    "label_source": "exofop:TESS Disposition",
@@ -3853,6 +4153,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.26499866604711175
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": -0.26499866604711175
    }
   },
@@ -3900,6 +4204,10 @@
    "scalars_finite_frac": 0.8787878787878788,
    "t_total": 184.1,
    "geometry_repair_v2": {
+    "v_shape": NaN,
+    "secondary_ratio": NaN
+   },
+   "geometry_repair_v3": {
     "v_shape": NaN,
     "secondary_ratio": NaN
    }
@@ -3951,6 +4259,10 @@
    "t_total": 59.68,
    "geometry_repair_v2": {
     "v_shape": 0.6333333333333333,
+    "secondary_ratio": -0.00752053546626261
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.17051729860610165,
     "secondary_ratio": -0.00752053546626261
    }
   },
@@ -4004,6 +4316,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.07941282902662462
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.07941282902662462
    }
   },
   "219766989": {
@@ -4051,9 +4367,13 @@
    "sample_file": "t219766989.npz",
    "scalars_finite_frac": 0.9696969696969697,
    "t_total": 42.16,
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.71 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.591925368372304
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.7059307174801271,
     "secondary_ratio": 0.591925368372304
    }
   },
@@ -4109,6 +4429,10 @@
    "geometry_repair_v2": {
     "v_shape": NaN,
     "secondary_ratio": NaN
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": NaN
    }
   },
   "96097215": {
@@ -4159,6 +4483,10 @@
    "t_total": 40.91,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.1075121146712846
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.1075121146712846
    }
   },
@@ -4211,12 +4539,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.12416097162906221
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.48591740462288274,
+    "secondary_ratio": 0.12416097162906221
    }
   },
   "103245940": {
    "target_id": 103245940,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-2967.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -4259,6 +4591,10 @@
    "label_note": "grazing subtype: v_shape=0.81 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 0.8148148148148149,
+    "secondary_ratio": 0.00812675802221651
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.38641259017367036,
     "secondary_ratio": 0.00812675802221651
    }
   },
@@ -4311,6 +4647,10 @@
    "geometry_repair_v2": {
     "v_shape": 0.543859649122807,
     "secondary_ratio": -1.0901924384865547
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.33222782685250807,
+    "secondary_ratio": -1.0901924384865547
    }
   },
   "237108272": {
@@ -4362,6 +4702,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.22041217065671456
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.22041217065671456
    }
   },
   "154796579": {
@@ -4409,6 +4753,10 @@
    "t_total": 147.14,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.029913426045914612
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.029913426045914612
    }
   },
@@ -4459,6 +4807,10 @@
    "t_total": 141.29,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.10489717504415443
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.6535589627673745,
     "secondary_ratio": 0.10489717504415443
    }
   },
@@ -4511,6 +4863,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.0025127671225782756
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.0025127671225782756
    }
   },
   "268143410": {
@@ -4558,6 +4914,10 @@
    "t_total": 265.03,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.31207959668190677
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.31207959668190677
    }
   },
@@ -4610,6 +4970,10 @@
    "geometry_repair_v2": {
     "v_shape": 0.08333333333333333,
     "secondary_ratio": -0.0037076997416788248
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.09762329711343638,
+    "secondary_ratio": -0.0037076997416788248
    }
   },
   "31553893": {
@@ -4659,6 +5023,10 @@
    "t_total": 199.34,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.06976534532390945
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.06976534532390945
    }
   },
@@ -4711,6 +5079,10 @@
    "geometry_repair_v2": {
     "v_shape": 0.19047619047619047,
     "secondary_ratio": 0.010751990820636622
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.13162327323643072,
+    "secondary_ratio": 0.010751990820636622
    }
   },
   "327663613": {
@@ -4758,6 +5130,10 @@
    "t_total": 73.09,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.0560519891796465
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.9751721262908091,
     "secondary_ratio": -0.0560519891796465
    }
   },
@@ -4808,6 +5184,10 @@
    "t_total": 112.66,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.389896401672556
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.389896401672556
    }
   },
@@ -4860,6 +5240,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.45377801142870994
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.45377801142870994
    }
   },
   "123664207": {
@@ -4910,6 +5294,10 @@
    "t_total": 140.51,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.1500087589493519
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.1500087589493519
    }
   },
@@ -4962,6 +5350,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.04117734890799499
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.2996833080844217,
+    "secondary_ratio": 0.04117734890799499
    }
   },
   "233188747": {
@@ -5013,6 +5405,10 @@
    "geometry_repair_v2": {
     "v_shape": 0.3333333333333333,
     "secondary_ratio": -0.0027358598008570714
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.30324225533041943,
+    "secondary_ratio": -0.0027358598008570714
    }
   },
   "383723559": {
@@ -5062,6 +5458,10 @@
    "t_total": 84.29,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.5667647641053164
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.5667647641053164
    }
   },
@@ -5114,6 +5514,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.13952088866149226
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.13952088866149226
    }
   },
   "177722855": {
@@ -5161,6 +5565,10 @@
    "t_total": 188.86,
    "geometry_repair_v2": {
     "v_shape": 0.8333333333333334,
+    "secondary_ratio": 0.1776130631397789
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.19871751601392162,
     "secondary_ratio": 0.1776130631397789
    }
   },
@@ -5212,6 +5620,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.09620717733643638
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.5103257597670664,
+    "secondary_ratio": 0.09620717733643638
    }
   },
   "388624270": {
@@ -5261,6 +5673,10 @@
    "t_total": 250.26,
    "geometry_repair_v2": {
     "v_shape": 0.45,
+    "secondary_ratio": -0.005310756254397432
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.2848651769857842,
     "secondary_ratio": -0.005310756254397432
    }
   },
@@ -5312,6 +5728,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.09690152778391346
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.20071523996243382,
+    "secondary_ratio": 0.09690152778391346
    }
   },
   "122262940": {
@@ -5361,6 +5781,10 @@
    "t_total": 165.51,
    "geometry_repair_v2": {
     "v_shape": 0.7407407407407408,
+    "secondary_ratio": -0.0004425687288500159
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.8821447990426855,
     "secondary_ratio": -0.0004425687288500159
    }
   },
@@ -5412,6 +5836,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.5094905890388424
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.5094905890388424
    }
   },
   "449197624": {
@@ -5462,6 +5890,10 @@
    "geometry_repair_v2": {
     "v_shape": 0.8333333333333334,
     "secondary_ratio": 0.0748764080536414
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.5800169901773037,
+    "secondary_ratio": 0.0748764080536414
    }
   },
   "2876": {
@@ -5509,6 +5941,10 @@
    "t_total": 177.12,
    "geometry_repair_v2": {
     "v_shape": 0.787878787878788,
+    "secondary_ratio": 0.04454698279250893
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.299401716570235,
     "secondary_ratio": 0.04454698279250893
    }
   },
@@ -5562,6 +5998,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.014717079448742789
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.014717079448742789
    }
   },
   "443199889": {
@@ -5611,6 +6051,10 @@
    "t_total": 166.85,
    "geometry_repair_v2": {
     "v_shape": 0.4000000000000001,
+    "secondary_ratio": 0.02849790304554374
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.022108894931218776,
     "secondary_ratio": 0.02849790304554374
    }
   },
@@ -5662,12 +6106,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.1628106610226327
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.2516096538625218,
+    "secondary_ratio": 0.1628106610226327
    }
   },
   "262499797": {
    "target_id": 262499797,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-4858.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -5713,6 +6161,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.015424422625350508
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.3850040715867327,
     "secondary_ratio": 0.015424422625350508
    }
   },
@@ -5766,6 +6218,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.3539430682235896
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.3539430682235896
    }
   },
   "391821647": {
@@ -5817,6 +6273,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.4734693753404958
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.9849979346436685,
+    "secondary_ratio": 0.4734693753404958
    }
   },
   "183979262": {
@@ -5865,9 +6325,13 @@
    "sample_file": "t183979262.npz",
    "scalars_finite_frac": 0.9696969696969697,
    "t_total": 132.81,
-   "label_note": "grazing subtype: v_shape=0.50 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.90 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 0.5,
+    "secondary_ratio": 0.33494684764468136
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.9040824049342439,
     "secondary_ratio": 0.33494684764468136
    }
   },
@@ -5916,6 +6380,10 @@
    "t_total": 206.41,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.08627638009318124
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.045961715331643616,
     "secondary_ratio": 0.08627638009318124
    }
   },
@@ -5968,6 +6436,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.8469129272640297
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.8469129272640297
    }
   },
   "298495970": {
@@ -6015,9 +6487,13 @@
    "sample_file": "t298495970.npz",
    "scalars_finite_frac": 0.9393939393939394,
    "t_total": 78.16,
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.66 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.0003985064365782305
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.6582268286065647,
     "secondary_ratio": 0.0003985064365782305
    }
   },
@@ -6070,6 +6546,10 @@
    "geometry_repair_v2": {
     "v_shape": 0.36111111111111116,
     "secondary_ratio": 0.06004730972400842
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.049296901995758015,
+    "secondary_ratio": 0.06004730972400842
    }
   },
   "286561122": {
@@ -6118,6 +6598,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.12902764808100234
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.6297319311776651,
+    "secondary_ratio": -0.12902764808100234
    }
   },
   "81429971": {
@@ -6163,9 +6647,13 @@
    "sample_file": "t81429971.npz",
    "scalars_finite_frac": 0.8181818181818182,
    "t_total": 135.4,
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
+   "label_note": "grazing subtype: v_shape=0.53 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.025413619538119363
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.5317818644575317,
     "secondary_ratio": 0.025413619538119363
    }
   },
@@ -6217,6 +6705,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.250606217493497
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.9394725436217004,
+    "secondary_ratio": -0.250606217493497
    }
   },
   "119081096": {
@@ -6267,12 +6759,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.022507095543089415
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.022507095543089415
    }
   },
   "268042363": {
    "target_id": 268042363,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-2828.01",
    "label_source": "exofop:TESS Disposition",
@@ -6315,6 +6811,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.05273373889952532
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.2538911919571516,
     "secondary_ratio": -0.05273373889952532
    }
   },
@@ -6367,12 +6867,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.0769875869992143
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.0769875869992143
    }
   },
   "363635669": {
    "target_id": 363635669,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-4275.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -6418,6 +6922,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.04835659799116301
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.4360244023158401,
     "secondary_ratio": -0.04835659799116301
    }
   },
@@ -6469,6 +6977,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.006928921221831099
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.023361041599231507,
+    "secondary_ratio": 0.006928921221831099
    }
   },
   "15827263": {
@@ -6516,6 +7028,10 @@
    "t_total": 62.29,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.20410940832871624
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.20410940832871624
    }
   },
@@ -6568,6 +7084,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": NaN
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": NaN
    }
   },
   "448435566": {
@@ -6618,6 +7138,10 @@
    "t_total": 199.95,
    "geometry_repair_v2": {
     "v_shape": 0.5151515151515151,
+    "secondary_ratio": -0.006276505474458452
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.26010298844922747,
     "secondary_ratio": -0.006276505474458452
    }
   },
@@ -6671,6 +7195,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.26025161204860736
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.26025161204860736
    }
   },
   "172110606": {
@@ -6722,12 +7250,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.046608864679526955
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.489107714835938,
+    "secondary_ratio": 0.046608864679526955
    }
   },
   "188989177": {
    "target_id": 188989177,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-433.01",
    "label_source": "exofop:TESS Disposition",
@@ -6772,6 +7304,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.13420615519769055
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.22157010274849495,
     "secondary_ratio": 0.13420615519769055
    }
   },
@@ -6824,6 +7360,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.034279903593436474
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.034279903593436474
    }
   },
   "387527558": {
@@ -6873,6 +7413,10 @@
    "t_total": 142.45,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.1091736849892186
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": -0.1091736849892186
    }
   },
@@ -6924,12 +7468,16 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": -0.04204740394331989
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.1394170267586922,
+    "secondary_ratio": -0.04204740394331989
    }
   },
   "158916431": {
    "target_id": 158916431,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-2146.01",
    "label_source": "exofop:TESS Disposition",
@@ -6974,6 +7522,10 @@
    "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v2",
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.1459401201426651
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.3808840206353697,
     "secondary_ratio": 0.1459401201426651
    }
   },
@@ -7025,6 +7577,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.00086420429292182
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.39622007825857014,
+    "secondary_ratio": 0.00086420429292182
    }
   },
   "262457587": {
@@ -7074,6 +7630,10 @@
    "t_total": 29.17,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": 0.1906133747230784
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
     "secondary_ratio": 0.1906133747230784
    }
   },
@@ -7126,6 +7686,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.16975928587216457
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.16975928587216457
    }
   },
   "70887357": {
@@ -7177,6 +7741,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.05239569208836227
+   },
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.05239569208836227
    }
   },
   "20182780": {
@@ -7226,6 +7794,10 @@
    "t_total": 80.05,
    "geometry_repair_v2": {
     "v_shape": 1.0,
+    "secondary_ratio": -0.05428272573134803
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.36898619832991547,
     "secondary_ratio": -0.05428272573134803
    }
   },
@@ -7277,6 +7849,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.012917299651814282
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.2646101074296116,
+    "secondary_ratio": 0.012917299651814282
    }
   },
   "90448944": {
@@ -7325,6 +7901,10 @@
    "geometry_repair_v2": {
     "v_shape": 1.0,
     "secondary_ratio": 0.08099679665127771
+   },
+   "geometry_repair_v3": {
+    "v_shape": 0.9690500399178892,
+    "secondary_ratio": 0.08099679665127771
    }
   },
   "322825139": {
@@ -7369,7 +7949,11 @@
    "status": "ok",
    "sample_file": "t322825139.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 86.85
+   "t_total": 86.85,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 1.0957636398258148
+   }
   },
   "337129672": {
    "target_id": 337129672,
@@ -7412,11 +7996,15 @@
    },
    "t_features": 0.05,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=0.64 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=0.80 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t337129672.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 206.1
+   "t_total": 206.1,
+   "geometry_repair_v3": {
+    "v_shape": 0.7954313896276944,
+    "secondary_ratio": -0.00413832291261273
+   }
   },
   "63190194": {
    "target_id": 63190194,
@@ -7460,7 +8048,11 @@
    "status": "ok",
    "sample_file": "t63190194.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 66.66
+   "t_total": 66.66,
+   "geometry_repair_v3": {
+    "v_shape": 0.13602109186284136,
+    "secondary_ratio": 0.03895869231256864
+   }
   },
   "276360911": {
    "target_id": 276360911,
@@ -7507,7 +8099,11 @@
    "status": "ok",
    "sample_file": "t276360911.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 159.04
+   "t_total": 159.04,
+   "geometry_repair_v3": {
+    "v_shape": 0.7356333843410893,
+    "secondary_ratio": -1.0308904004278665
+   }
   },
   "31114545": {
    "target_id": 31114545,
@@ -7554,7 +8150,11 @@
    "status": "ok",
    "sample_file": "t31114545.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 64.83
+   "t_total": 64.83,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.03851140757835576
+   }
   },
   "268727719": {
    "target_id": 268727719,
@@ -7597,11 +8197,15 @@
    },
    "t_features": 0.02,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=0.67 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=0.48 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t268727719.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 130.8
+   "t_total": 130.8,
+   "geometry_repair_v3": {
+    "v_shape": 0.4774282015885675,
+    "secondary_ratio": -0.07566720918327922
+   }
   },
   "43921512": {
    "target_id": 43921512,
@@ -7645,7 +8249,11 @@
    "status": "ok",
    "sample_file": "t43921512.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 54.33
+   "t_total": 54.33,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.16151742895299956
+   }
   },
   "55748194": {
    "target_id": 55748194,
@@ -7691,7 +8299,11 @@
    "status": "ok",
    "sample_file": "t55748194.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 19.26
+   "t_total": 19.26,
+   "geometry_repair_v3": {
+    "v_shape": 0.1621067498491243,
+    "secondary_ratio": -0.004543268826162937
+   }
   },
   "127315102": {
    "target_id": 127315102,
@@ -7737,7 +8349,11 @@
    "status": "ok",
    "sample_file": "t127315102.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 85.05
+   "t_total": 85.05,
+   "geometry_repair_v3": {
+    "v_shape": 0.9952444532043198,
+    "secondary_ratio": -0.0012650961488711511
+   }
   },
   "160268701": {
    "target_id": 160268701,
@@ -7784,7 +8400,11 @@
    "status": "ok",
    "sample_file": "t160268701.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 99.28
+   "t_total": 99.28,
+   "geometry_repair_v3": {
+    "v_shape": 0.34108487946489346,
+    "secondary_ratio": -0.0007505022742180456
+   }
   },
   "118339710": {
    "target_id": 118339710,
@@ -7830,7 +8450,11 @@
    "status": "ok",
    "sample_file": "t118339710.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 125.24
+   "t_total": 125.24,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.0999873306969232
+   }
   },
   "298073824": {
    "target_id": 298073824,
@@ -7877,7 +8501,11 @@
    "status": "ok",
    "sample_file": "t298073824.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 137.95
+   "t_total": 137.95,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -1.1956056913219442
+   }
   },
   "262135904": {
    "target_id": 262135904,
@@ -7923,7 +8551,11 @@
    "status": "ok",
    "sample_file": "t262135904.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 90.82
+   "t_total": 90.82,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.035993473511548926
+   }
   },
   "128501004": {
    "target_id": 128501004,
@@ -7964,11 +8596,15 @@
    },
    "t_features": 0.01,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=0.81 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=0.71 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t128501004.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 65.79
+   "t_total": 65.79,
+   "geometry_repair_v3": {
+    "v_shape": 0.7148174175654324,
+    "secondary_ratio": -0.006483693289424556
+   }
   },
   "269400980": {
    "target_id": 269400980,
@@ -8014,7 +8650,11 @@
    "status": "ok",
    "sample_file": "t269400980.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 148.86
+   "t_total": 148.86,
+   "geometry_repair_v3": {
+    "v_shape": 0.39717695696534294,
+    "secondary_ratio": -0.0021100390620500597
+   }
   },
   "376981340": {
    "target_id": 376981340,
@@ -8060,7 +8700,11 @@
    "status": "ok",
    "sample_file": "t376981340.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 135.51
+   "t_total": 135.51,
+   "geometry_repair_v3": {
+    "v_shape": 0.11841354190788289,
+    "secondary_ratio": 0.020937950958007056
+   }
   },
   "233681149": {
    "target_id": 233681149,
@@ -8107,12 +8751,16 @@
    "status": "ok",
    "sample_file": "t233681149.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 341.22
+   "t_total": 341.22,
+   "geometry_repair_v3": {
+    "v_shape": 0.47925736394803725,
+    "secondary_ratio": 0.09863443385687848
+   }
   },
   "39077574": {
    "target_id": 39077574,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-3825.01",
    "label_source": "exofop:TESS Disposition",
@@ -8152,7 +8800,11 @@
    "status": "ok",
    "sample_file": "t39077574.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 61.72
+   "t_total": 61.72,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.26776316556206115
+   }
   },
   "394223845": {
    "target_id": 394223845,
@@ -8199,7 +8851,11 @@
    "status": "ok",
    "sample_file": "t394223845.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 138.01
+   "t_total": 138.01,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.2712745308054833
+   }
   },
   "160074939": {
    "target_id": 160074939,
@@ -8246,7 +8902,11 @@
    "status": "ok",
    "sample_file": "t160074939.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 60.03
+   "t_total": 60.03,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.4681498818373533
+   }
   },
   "33690636": {
    "target_id": 33690636,
@@ -8290,12 +8950,16 @@
    "status": "ok",
    "sample_file": "t33690636.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 49.27
+   "t_total": 49.27,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.045251704741550054
+   }
   },
   "146467675": {
    "target_id": 146467675,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-955.01",
    "label_source": "exofop:TESS Disposition",
@@ -8335,7 +8999,11 @@
    "status": "ok",
    "sample_file": "t146467675.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 38.73
+   "t_total": 38.73,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.15352005382992276
+   }
   },
   "367739494": {
    "target_id": 367739494,
@@ -8382,7 +9050,11 @@
    "status": "ok",
    "sample_file": "t367739494.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 320.26
+   "t_total": 320.26,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.5498958177315106
+   }
   },
   "229951289": {
    "target_id": 229951289,
@@ -8429,7 +9101,11 @@
    "status": "ok",
    "sample_file": "t229951289.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 315.79
+   "t_total": 315.79,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.21677938527939422
+   }
   },
   "124709665": {
    "target_id": 124709665,
@@ -8473,12 +9149,16 @@
    "status": "ok",
    "sample_file": "t124709665.npz",
    "scalars_finite_frac": 0.8484848484848485,
-   "t_total": 53.02
+   "t_total": 53.02,
+   "geometry_repair_v3": {
+    "v_shape": 0.532110821202379,
+    "secondary_ratio": 0.06453090827540195
+   }
   },
   "97158538": {
    "target_id": 97158538,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-631.01",
    "label_source": "exofop:TESS Disposition",
@@ -8520,7 +9200,11 @@
    "status": "ok",
    "sample_file": "t97158538.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 72.46
+   "t_total": 72.46,
+   "geometry_repair_v3": {
+    "v_shape": 0.2587854716024167,
+    "secondary_ratio": -0.10198382358690891
+   }
   },
   "165337974": {
    "target_id": 165337974,
@@ -8568,7 +9252,11 @@
    "status": "ok",
    "sample_file": "t165337974.npz",
    "scalars_finite_frac": 0.8787878787878788,
-   "t_total": 152.97
+   "t_total": 152.97,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.13750067112975364
+   }
   },
   "8677530": {
    "target_id": 8677530,
@@ -8612,7 +9300,11 @@
    "status": "ok",
    "sample_file": "t8677530.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 20.77
+   "t_total": 20.77,
+   "geometry_repair_v3": {
+    "v_shape": 0.12604884049745876,
+    "secondary_ratio": 0.03878609602724403
+   }
   },
   "169187982": {
    "target_id": 169187982,
@@ -8658,7 +9350,11 @@
    "status": "ok",
    "sample_file": "t169187982.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 186.12
+   "t_total": 186.12,
+   "geometry_repair_v3": {
+    "v_shape": 0.4736192104705377,
+    "secondary_ratio": 0.002874601001788919
+   }
   },
   "159510109": {
    "target_id": 159510109,
@@ -8705,7 +9401,11 @@
    "status": "ok",
    "sample_file": "t159510109.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 261.82
+   "t_total": 261.82,
+   "geometry_repair_v3": {
+    "v_shape": 0.20942628414779532,
+    "secondary_ratio": 0.0004377941783819393
+   }
   },
   "320004517": {
    "target_id": 320004517,
@@ -8751,7 +9451,11 @@
    "status": "ok",
    "sample_file": "t320004517.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 71.88
+   "t_total": 71.88,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.051158422080691004
+   }
   },
   "198457103": {
    "target_id": 198457103,
@@ -8798,7 +9502,11 @@
    "status": "ok",
    "sample_file": "t198457103.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 306.57
+   "t_total": 306.57,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.6580115045088704
+   }
   },
   "219151731": {
    "target_id": 219151731,
@@ -8844,7 +9552,11 @@
    "status": "ok",
    "sample_file": "t219151731.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 91.97
+   "t_total": 91.97,
+   "geometry_repair_v3": {
+    "v_shape": 0.269630323226772,
+    "secondary_ratio": 0.08719494486226409
+   }
   },
   "220518305": {
    "target_id": 220518305,
@@ -8891,7 +9603,11 @@
    "status": "ok",
    "sample_file": "t220518305.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 99.55
+   "t_total": 99.55,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.00787442074091304
+   }
   },
   "67926921": {
    "target_id": 67926921,
@@ -8935,7 +9651,11 @@
    "status": "ok",
    "sample_file": "t67926921.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 38.73
+   "t_total": 38.73,
+   "geometry_repair_v3": {
+    "v_shape": 0.09007806676478143,
+    "secondary_ratio": 0.03901573151542889
+   }
   },
   "198211976": {
    "target_id": 198211976,
@@ -8983,7 +9703,11 @@
    "status": "ok",
    "sample_file": "t198211976.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 423.06
+   "t_total": 423.06,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.16730478046074204
+   }
   },
   "266688542": {
    "target_id": 266688542,
@@ -9030,12 +9754,16 @@
    "status": "ok",
    "sample_file": "t266688542.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 93.69
+   "t_total": 93.69,
+   "geometry_repair_v3": {
+    "v_shape": 0.9311161369441564,
+    "secondary_ratio": 0.04820972768694719
+   }
   },
   "262530873": {
    "target_id": 262530873,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-304.01",
    "label_source": "exofop:TESS Disposition",
@@ -9077,7 +9805,11 @@
    "status": "ok",
    "sample_file": "t262530873.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 32.38
+   "t_total": 32.38,
+   "geometry_repair_v3": {
+    "v_shape": 0.05538325962829541,
+    "secondary_ratio": 0.1708236281651094
+   }
   },
   "268159158": {
    "target_id": 268159158,
@@ -9125,7 +9857,11 @@
    "status": "ok",
    "sample_file": "t268159158.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 115.68
+   "t_total": 115.68,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.1008547590504342
+   }
   },
   "362220495": {
    "target_id": 362220495,
@@ -9173,7 +9909,11 @@
    "status": "ok",
    "sample_file": "t362220495.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 327.3
+   "t_total": 327.3,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.7127908538651446
+   }
   },
   "348844154": {
    "target_id": 348844154,
@@ -9221,7 +9961,11 @@
    "status": "ok",
    "sample_file": "t348844154.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 333.82
+   "t_total": 333.82,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.34379009956938755
+   }
   },
   "269892793": {
    "target_id": 269892793,
@@ -9264,11 +10008,15 @@
    },
    "t_features": 0.01,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=0.62 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=0.67 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t269892793.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 50.49
+   "t_total": 50.49,
+   "geometry_repair_v3": {
+    "v_shape": 0.667609221869768,
+    "secondary_ratio": -0.00047183407021540946
+   }
   },
   "78154865": {
    "target_id": 78154865,
@@ -9315,7 +10063,11 @@
    "status": "ok",
    "sample_file": "t78154865.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 37.24
+   "t_total": 37.24,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.24379123072544484
+   }
   },
   "114103134": {
    "target_id": 114103134,
@@ -9359,12 +10111,16 @@
    "status": "ok",
    "sample_file": "t114103134.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 141.08
+   "t_total": 141.08,
+   "geometry_repair_v3": {
+    "v_shape": 0.9123993246336018,
+    "secondary_ratio": -0.013033755997673585
+   }
   },
   "404610583": {
    "target_id": 404610583,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-5966.01",
    "label_source": "exofop:TESS Disposition",
@@ -9406,7 +10162,11 @@
    "status": "ok",
    "sample_file": "t404610583.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 135.46
+   "t_total": 135.46,
+   "geometry_repair_v3": {
+    "v_shape": 0.1590114649600379,
+    "secondary_ratio": 0.006472126924789312
+   }
   },
   "68808155": {
    "target_id": 68808155,
@@ -9450,7 +10210,11 @@
    "status": "ok",
    "sample_file": "t68808155.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 91.66
+   "t_total": 91.66,
+   "geometry_repair_v3": {
+    "v_shape": 0.07858328120548246,
+    "secondary_ratio": 0.005481170082162568
+   }
   },
   "377191482": {
    "target_id": 377191482,
@@ -9498,7 +10262,11 @@
    "status": "ok",
    "sample_file": "t377191482.npz",
    "scalars_finite_frac": 0.8484848484848485,
-   "t_total": 234.29
+   "t_total": 234.29,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.14298191544093647
+   }
   },
   "274662200": {
    "target_id": 274662200,
@@ -9545,12 +10313,16 @@
    "status": "ok",
    "sample_file": "t274662200.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 132.77
+   "t_total": 132.77,
+   "geometry_repair_v3": {
+    "v_shape": 0.3075142281335453,
+    "secondary_ratio": 0.18992871364778477
+   }
   },
   "86280613": {
    "target_id": 86280613,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-1786.01",
    "label_source": "exofop:TESS Disposition",
@@ -9592,7 +10364,11 @@
    "status": "ok",
    "sample_file": "t86280613.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 45.22
+   "t_total": 45.22,
+   "geometry_repair_v3": {
+    "v_shape": 0.3634827123911723,
+    "secondary_ratio": -0.006096936450862233
+   }
   },
   "159160230": {
    "target_id": 159160230,
@@ -9636,7 +10412,11 @@
    "status": "ok",
    "sample_file": "t159160230.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 60.69
+   "t_total": 60.69,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.06802385549362248
+   }
   },
   "320417762": {
    "target_id": 320417762,
@@ -9683,7 +10463,11 @@
    "status": "ok",
    "sample_file": "t320417762.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 127.79
+   "t_total": 127.79,
+   "geometry_repair_v3": {
+    "v_shape": 0.27774217989550337,
+    "secondary_ratio": 0.8535684022600522
+   }
   },
   "407394748": {
    "target_id": 407394748,
@@ -9730,7 +10514,11 @@
    "status": "ok",
    "sample_file": "t407394748.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 86.61
+   "t_total": 86.61,
+   "geometry_repair_v3": {
+    "v_shape": 0.4446356699613685,
+    "secondary_ratio": -0.23201179641563938
+   }
   },
   "284450803": {
    "target_id": 284450803,
@@ -9774,11 +10562,15 @@
    },
    "t_features": 0.08,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=0.93 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t284450803.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 155.87
+   "t_total": 155.87,
+   "geometry_repair_v3": {
+    "v_shape": 0.9333422730917995,
+    "secondary_ratio": -0.04200146225577176
+   }
   },
   "311133118": {
    "target_id": 311133118,
@@ -9824,7 +10616,11 @@
    "status": "ok",
    "sample_file": "t311133118.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 73.64
+   "t_total": 73.64,
+   "geometry_repair_v3": {
+    "v_shape": 0.4841332156966711,
+    "secondary_ratio": -0.004488285206933171
+   }
   },
   "71134735": {
    "target_id": 71134735,
@@ -9870,7 +10666,11 @@
    "status": "ok",
    "sample_file": "t71134735.npz",
    "scalars_finite_frac": 0.8484848484848485,
-   "t_total": 28.47
+   "t_total": 28.47,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.2095958229183573
+   }
   },
   "319968129": {
    "target_id": 319968129,
@@ -9914,12 +10714,16 @@
    "status": "ok",
    "sample_file": "t319968129.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 91.8
+   "t_total": 91.8,
+   "geometry_repair_v3": {
+    "v_shape": 0.08095506402216546,
+    "secondary_ratio": -0.08397221470137037
+   }
   },
   "341544930": {
    "target_id": 341544930,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-1182.01",
    "label_source": "exofop:TESS Disposition",
@@ -9961,7 +10765,11 @@
    "status": "ok",
    "sample_file": "t341544930.npz",
    "scalars_finite_frac": 0.7575757575757576,
-   "t_total": 100.16
+   "t_total": 100.16,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.024868282938995057
+   }
   },
   "284747017": {
    "target_id": 284747017,
@@ -10008,7 +10816,11 @@
    "status": "ok",
    "sample_file": "t284747017.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 119.03
+   "t_total": 119.03,
+   "geometry_repair_v3": {
+    "v_shape": 0.23469223119857166,
+    "secondary_ratio": 0.18279143724839955
+   }
   },
   "259099556": {
    "target_id": 259099556,
@@ -10055,7 +10867,11 @@
    "status": "ok",
    "sample_file": "t259099556.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 236.4
+   "t_total": 236.4,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": NaN
+   }
   },
   "277987172": {
    "target_id": 277987172,
@@ -10099,7 +10915,11 @@
    "status": "ok",
    "sample_file": "t277987172.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 101.0
+   "t_total": 101.0,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.13825545230915476
+   }
   },
   "233541860": {
    "target_id": 233541860,
@@ -10143,11 +10963,15 @@
    },
    "t_features": 0.03,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t233541860.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 244.39
+   "t_total": 244.39,
+   "geometry_repair_v3": {
+    "v_shape": 0.996826484485422,
+    "secondary_ratio": -0.14799538114121902
+   }
   },
   "14091704": {
    "target_id": 14091704,
@@ -10193,7 +11017,11 @@
    "status": "ok",
    "sample_file": "t14091704.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 77.17
+   "t_total": 77.17,
+   "geometry_repair_v3": {
+    "v_shape": 0.3908422651461037,
+    "secondary_ratio": -0.030183241229026606
+   }
   },
   "152714791": {
    "target_id": 152714791,
@@ -10237,7 +11065,11 @@
    "status": "ok",
    "sample_file": "t152714791.npz",
    "scalars_finite_frac": 0.8484848484848485,
-   "t_total": 30.47
+   "t_total": 30.47,
+   "geometry_repair_v3": {
+    "v_shape": 0.4434770670841872,
+    "secondary_ratio": -0.04941547804638095
+   }
   },
   "179033846": {
    "target_id": 179033846,
@@ -10280,11 +11112,15 @@
    },
    "t_features": 0.01,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t179033846.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 46.93
+   "t_total": 46.93,
+   "geometry_repair_v3": {
+    "v_shape": 0.9999988122025188,
+    "secondary_ratio": 0.03634241953163821
+   }
   },
   "144037593": {
    "target_id": 144037593,
@@ -10328,7 +11164,11 @@
    "status": "ok",
    "sample_file": "t144037593.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 40.92
+   "t_total": 40.92,
+   "geometry_repair_v3": {
+    "v_shape": 0.12450253804467404,
+    "secondary_ratio": 0.053589699962873605
+   }
   },
   "259863352": {
    "target_id": 259863352,
@@ -10375,7 +11215,11 @@
    "status": "ok",
    "sample_file": "t259863352.npz",
    "scalars_finite_frac": 0.8787878787878788,
-   "t_total": 115.89
+   "t_total": 115.89,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.1984386846333546
+   }
   },
   "449050247": {
    "target_id": 449050247,
@@ -10419,12 +11263,16 @@
    "status": "ok",
    "sample_file": "t449050247.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 20.93
+   "t_total": 20.93,
+   "geometry_repair_v3": {
+    "v_shape": 0.08071667580051216,
+    "secondary_ratio": 0.032497535950017954
+   }
   },
   "339250695": {
    "target_id": 339250695,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-3725.01",
    "label_source": "exofop:TESS Disposition",
@@ -10466,7 +11314,11 @@
    "status": "ok",
    "sample_file": "t339250695.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 48.61
+   "t_total": 48.61,
+   "geometry_repair_v3": {
+    "v_shape": 0.40147389878160916,
+    "secondary_ratio": 0.39242249209762214
+   }
   },
   "96170689": {
    "target_id": 96170689,
@@ -10512,7 +11364,11 @@
    "status": "ok",
    "sample_file": "t96170689.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 33.6
+   "t_total": 33.6,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.019853212112132926
+   }
   },
   "295354126": {
    "target_id": 295354126,
@@ -10556,7 +11412,11 @@
    "status": "ok",
    "sample_file": "t295354126.npz",
    "scalars_finite_frac": 0.8181818181818182,
-   "t_total": 146.86
+   "t_total": 146.86,
+   "geometry_repair_v3": {
+    "v_shape": 0.5828473534857279,
+    "secondary_ratio": 0.06429677910183697
+   }
   },
   "354600221": {
    "target_id": 354600221,
@@ -10599,11 +11459,15 @@
    },
    "t_features": 0.02,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=0.79 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=0.45 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t354600221.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 113.27
+   "t_total": 113.27,
+   "geometry_repair_v3": {
+    "v_shape": 0.4521911101006831,
+    "secondary_ratio": -0.18585148616836697
+   }
   },
   "263313709": {
    "target_id": 263313709,
@@ -10649,7 +11513,11 @@
    "status": "ok",
    "sample_file": "t263313709.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 262.36
+   "t_total": 262.36,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.1526125761106979
+   }
   },
   "49687222": {
    "target_id": 49687222,
@@ -10696,7 +11564,11 @@
    "status": "ok",
    "sample_file": "t49687222.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 55.72
+   "t_total": 55.72,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.11983888748343102
+   }
   },
   "153027658": {
    "target_id": 153027658,
@@ -10742,7 +11614,11 @@
    "status": "ok",
    "sample_file": "t153027658.npz",
    "scalars_finite_frac": 0.8484848484848485,
-   "t_total": 60.73
+   "t_total": 60.73,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.06316442217970648
+   }
   },
   "467783290": {
    "target_id": 467783290,
@@ -10785,11 +11661,15 @@
    },
    "t_features": 0.04,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=0.87 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=0.51 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t467783290.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 134.03
+   "t_total": 134.03,
+   "geometry_repair_v3": {
+    "v_shape": 0.5135467330407781,
+    "secondary_ratio": -0.006726752027471877
+   }
   },
   "86451883": {
    "target_id": 86451883,
@@ -10836,7 +11716,11 @@
    "status": "ok",
    "sample_file": "t86451883.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 192.42
+   "t_total": 192.42,
+   "geometry_repair_v3": {
+    "v_shape": 0.38755301671168585,
+    "secondary_ratio": 0.33952733127917395
+   }
   },
   "270435047": {
    "target_id": 270435047,
@@ -10883,7 +11767,11 @@
    "status": "ok",
    "sample_file": "t270435047.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 97.22
+   "t_total": 97.22,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.9495938679919839
+   }
   },
   "120269103": {
    "target_id": 120269103,
@@ -10927,12 +11815,16 @@
    "status": "ok",
    "sample_file": "t120269103.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 35.2
+   "t_total": 35.2,
+   "geometry_repair_v3": {
+    "v_shape": 0.09535379612231017,
+    "secondary_ratio": -0.002666898588318846
+   }
   },
   "400683848": {
    "target_id": 400683848,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-4243.01",
    "label_source": "exofop:TESS Disposition",
@@ -10975,7 +11867,11 @@
    "status": "ok",
    "sample_file": "t400683848.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 144.97
+   "t_total": 144.97,
+   "geometry_repair_v3": {
+    "v_shape": 0.23495134366462955,
+    "secondary_ratio": 0.06986961944195746
+   }
   },
   "458424950": {
    "target_id": 458424950,
@@ -11021,7 +11917,11 @@
    "status": "ok",
    "sample_file": "t458424950.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 31.22
+   "t_total": 31.22,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.12428786761900237
+   }
   },
   "20303110": {
    "target_id": 20303110,
@@ -11067,7 +11967,11 @@
    "status": "ok",
    "sample_file": "t20303110.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 100.51
+   "t_total": 100.51,
+   "geometry_repair_v3": {
+    "v_shape": 0.29915543699814684,
+    "secondary_ratio": -0.014882417468309423
+   }
   },
   "155044736": {
    "target_id": 155044736,
@@ -11113,7 +12017,11 @@
    "status": "ok",
    "sample_file": "t155044736.npz",
    "scalars_finite_frac": 0.8484848484848485,
-   "t_total": 59.3
+   "t_total": 59.3,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.3455821806270228
+   }
   },
   "260609205": {
    "target_id": 260609205,
@@ -11160,7 +12068,11 @@
    "status": "ok",
    "sample_file": "t260609205.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 318.57
+   "t_total": 318.57,
+   "geometry_repair_v3": {
+    "v_shape": 0.08321800712342482,
+    "secondary_ratio": 0.08675945993318546
+   }
   },
   "468433454": {
    "target_id": 468433454,
@@ -11204,7 +12116,11 @@
    "status": "ok",
    "sample_file": "t468433454.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 26.52
+   "t_total": 26.52,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.19919218655790003
+   }
   },
   "13499636": {
    "target_id": 13499636,
@@ -11251,7 +12167,11 @@
    "status": "ok",
    "sample_file": "t13499636.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 41.55
+   "t_total": 41.55,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.52451911725451
+   }
   },
   "288471040": {
    "target_id": 288471040,
@@ -11299,7 +12219,11 @@
    "status": "ok",
    "sample_file": "t288471040.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 244.93
+   "t_total": 244.93,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.018897627594975024
+   }
   },
   "7624182": {
    "target_id": 7624182,
@@ -11343,11 +12267,15 @@
    },
    "t_features": 0.02,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t7624182.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 79.67
+   "t_total": 79.67,
+   "geometry_repair_v3": {
+    "v_shape": 0.9983274949281068,
+    "secondary_ratio": 0.32437151692666266
+   }
   },
   "367753709": {
    "target_id": 367753709,
@@ -11394,7 +12322,11 @@
    "status": "ok",
    "sample_file": "t367753709.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 254.4
+   "t_total": 254.4,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.07857772442206912
+   }
   },
   "376168473": {
    "target_id": 376168473,
@@ -11440,7 +12372,11 @@
    "status": "ok",
    "sample_file": "t376168473.npz",
    "scalars_finite_frac": 0.8787878787878788,
-   "t_total": 49.26
+   "t_total": 49.26,
+   "geometry_repair_v3": {
+    "v_shape": 0.09427344468311653,
+    "secondary_ratio": 0.1672649174374917
+   }
   },
   "207084429": {
    "target_id": 207084429,
@@ -11486,7 +12422,11 @@
    "status": "ok",
    "sample_file": "t207084429.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 48.14
+   "t_total": 48.14,
+   "geometry_repair_v3": {
+    "v_shape": 0.459289188271992,
+    "secondary_ratio": 0.052088826791189306
+   }
   },
   "284592989": {
    "target_id": 284592989,
@@ -11530,7 +12470,11 @@
    "status": "ok",
    "sample_file": "t284592989.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 27.58
+   "t_total": 27.58,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.24772939979519135
+   }
   },
   "251086776": {
    "target_id": 251086776,
@@ -11577,7 +12521,11 @@
    "status": "ok",
    "sample_file": "t251086776.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 33.42
+   "t_total": 33.42,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.23278776279828137
+   }
   },
   "74197917": {
    "target_id": 74197917,
@@ -11623,12 +12571,16 @@
    "status": "ok",
    "sample_file": "t74197917.npz",
    "scalars_finite_frac": 0.7575757575757576,
-   "t_total": 78.25
+   "t_total": 78.25,
+   "geometry_repair_v3": {
+    "v_shape": 0.24526008054939785,
+    "secondary_ratio": 0.31615042847683456
+   }
   },
   "370877263": {
    "target_id": 370877263,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-6280.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -11668,7 +12620,11 @@
    "status": "ok",
    "sample_file": "t370877263.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 63.91
+   "t_total": 63.91,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.05837469940008664
+   }
   },
   "178657161": {
    "target_id": 178657161,
@@ -11714,7 +12670,11 @@
    "status": "ok",
    "sample_file": "t178657161.npz",
    "scalars_finite_frac": 0.7878787878787878,
-   "t_total": 119.16
+   "t_total": 119.16,
+   "geometry_repair_v3": {
+    "v_shape": 0.11114399418349692,
+    "secondary_ratio": 0.020309692735427577
+   }
   },
   "43064903": {
    "target_id": 43064903,
@@ -11761,7 +12721,11 @@
    "status": "ok",
    "sample_file": "t43064903.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 148.88
+   "t_total": 148.88,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.10861107780034338
+   }
   },
   "441798995": {
    "target_id": 441798995,
@@ -11809,7 +12773,11 @@
    "status": "ok",
    "sample_file": "t441798995.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 517.05
+   "t_total": 517.05,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.15429382029488514
+   }
   },
   "464544047": {
    "target_id": 464544047,
@@ -11853,7 +12821,11 @@
    "status": "ok",
    "sample_file": "t464544047.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 84.8
+   "t_total": 84.8,
+   "geometry_repair_v3": {
+    "v_shape": 0.05314407428191692,
+    "secondary_ratio": 0.07440720568473463
+   }
   },
   "62301521": {
    "target_id": 62301521,
@@ -11900,12 +12872,16 @@
    "status": "ok",
    "sample_file": "t62301521.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 64.54
+   "t_total": 64.54,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.6278251223287759
+   }
   },
   "300810086": {
    "target_id": 300810086,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-385.01",
    "label_source": "exofop:TESS Disposition",
@@ -11948,7 +12924,11 @@
    "status": "ok",
    "sample_file": "t300810086.npz",
    "scalars_finite_frac": 0.8484848484848485,
-   "t_total": 273.96
+   "t_total": 273.96,
+   "geometry_repair_v3": {
+    "v_shape": 0.4181634731315171,
+    "secondary_ratio": -0.002517730234115265
+   }
   },
   "72542131": {
    "target_id": 72542131,
@@ -12017,7 +12997,11 @@
    "status": "ok",
    "sample_file": "t72542131.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 133.91
+   "t_total": 133.91,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.23771748557198066
+   }
   },
   "45465399": {
    "target_id": 45465399,
@@ -12079,7 +13063,11 @@
    "status": "ok",
    "sample_file": "t45465399.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 231.18
+   "t_total": 231.18,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.1760399323197811
+   }
   },
   "467331291": {
    "target_id": 467331291,
@@ -12156,7 +13144,11 @@
    "status": "ok",
    "sample_file": "t467331291.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 232.3
+   "t_total": 232.3,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.5944343545719256
+   }
   },
   "297853363": {
    "target_id": 297853363,
@@ -12225,7 +13217,11 @@
    "status": "ok",
    "sample_file": "t297853363.npz",
    "scalars_finite_frac": 0.8484848484848485,
-   "t_total": 38.84
+   "t_total": 38.84,
+   "geometry_repair_v3": {
+    "v_shape": 0.4493882811532828,
+    "secondary_ratio": 0.042984785447158676
+   }
   },
   "350861689": {
    "target_id": 350861689,
@@ -12280,7 +13276,11 @@
    "status": "ok",
    "sample_file": "t350861689.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 189.41
+   "t_total": 189.41,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 1.6342018449100972
+   }
   },
   "470156846": {
    "target_id": 470156846,
@@ -12350,7 +13350,11 @@
    "status": "ok",
    "sample_file": "t470156846.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 177.3
+   "t_total": 177.3,
+   "geometry_repair_v3": {
+    "v_shape": 0.3339450689876157,
+    "secondary_ratio": -0.005983097047123827
+   }
   },
   "459604398": {
    "target_id": 459604398,
@@ -12419,7 +13423,11 @@
    "status": "ok",
    "sample_file": "t459604398.npz",
    "scalars_finite_frac": 0.7878787878787878,
-   "t_total": 128.8
+   "t_total": 128.8,
+   "geometry_repair_v3": {
+    "v_shape": 0.999714876915594,
+    "secondary_ratio": -0.1086978788105175
+   }
   },
   "367913453": {
    "target_id": 367913453,
@@ -12472,7 +13480,11 @@
    "status": "ok",
    "sample_file": "t367913453.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 52.56
+   "t_total": 52.56,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.025047686987094725
+   }
   },
   "315350812": {
    "target_id": 315350812,
@@ -12541,7 +13553,11 @@
    "status": "ok",
    "sample_file": "t315350812.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 191.52
+   "t_total": 191.52,
+   "geometry_repair_v3": {
+    "v_shape": 0.41352114226432696,
+    "secondary_ratio": -0.012906756562099232
+   }
   },
   "60542708": {
    "target_id": 60542708,
@@ -12594,7 +13610,11 @@
    "status": "ok",
    "sample_file": "t60542708.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 65.93
+   "t_total": 65.93,
+   "geometry_repair_v3": {
+    "v_shape": 0.2765993116676902,
+    "secondary_ratio": 0.21234465337749764
+   }
   },
   "34980970": {
    "target_id": 34980970,
@@ -12654,7 +13674,11 @@
    "status": "ok",
    "sample_file": "t34980970.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 84.37
+   "t_total": 84.37,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.13996024972513457
+   }
   },
   "220414682": {
    "target_id": 220414682,
@@ -12709,7 +13733,11 @@
    "status": "ok",
    "sample_file": "t220414682.npz",
    "scalars_finite_frac": 0.8484848484848485,
-   "t_total": 360.37
+   "t_total": 360.37,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": NaN
+   }
   },
   "120692092": {
    "target_id": 120692092,
@@ -12764,7 +13792,11 @@
    "status": "ok",
    "sample_file": "t120692092.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 133.94
+   "t_total": 133.94,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.7667196900887555
+   }
   },
   "266213232": {
    "target_id": 266213232,
@@ -12825,7 +13857,11 @@
    "status": "ok",
    "sample_file": "t266213232.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 68.83
+   "t_total": 68.83,
+   "geometry_repair_v3": {
+    "v_shape": 0.22418819731727688,
+    "secondary_ratio": 0.07548658912160111
+   }
   },
   "382258844": {
    "target_id": 382258844,
@@ -12895,7 +13931,11 @@
    "status": "ok",
    "sample_file": "t382258844.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 338.12
+   "t_total": 338.12,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.1432592803786168
+   }
   },
   "453677947": {
    "target_id": 453677947,
@@ -12964,7 +14004,11 @@
    "status": "ok",
    "sample_file": "t453677947.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 113.41
+   "t_total": 113.41,
+   "geometry_repair_v3": {
+    "v_shape": 0.7750278745420909,
+    "secondary_ratio": 0.3023738676207209
+   }
   },
   "314992600": {
    "target_id": 314992600,
@@ -13025,7 +14069,11 @@
    "status": "ok",
    "sample_file": "t314992600.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 64.64
+   "t_total": 64.64,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.015023007875238548
+   }
   },
   "27414976": {
    "target_id": 27414976,
@@ -13085,7 +14133,11 @@
    "status": "ok",
    "sample_file": "t27414976.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 32.83
+   "t_total": 32.83,
+   "geometry_repair_v3": {
+    "v_shape": 0.08518314128860179,
+    "secondary_ratio": -0.1183784895456072
+   }
   },
   "454876465": {
    "target_id": 454876465,
@@ -13146,7 +14198,11 @@
    "status": "ok",
    "sample_file": "t454876465.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 124.91
+   "t_total": 124.91,
+   "geometry_repair_v3": {
+    "v_shape": 0.1733207393406083,
+    "secondary_ratio": 0.019762505814668267
+   }
   },
   "278196907": {
    "target_id": 278196907,
@@ -13216,7 +14272,11 @@
    "status": "ok",
    "sample_file": "t278196907.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 144.36
+   "t_total": 144.36,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.018497339442846143
+   }
   },
   "259230140": {
    "target_id": 259230140,
@@ -13278,7 +14338,11 @@
    "status": "ok",
    "sample_file": "t259230140.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 216.3
+   "t_total": 216.3,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.4600209339247547
+   }
   },
   "159725995": {
    "target_id": 159725995,
@@ -13340,7 +14404,11 @@
    "status": "ok",
    "sample_file": "t159725995.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 151.99
+   "t_total": 151.99,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": NaN
+   }
   },
   "404421005": {
    "target_id": 404421005,
@@ -13401,7 +14469,11 @@
    "status": "ok",
    "sample_file": "t404421005.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 60.86
+   "t_total": 60.86,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.1317692568292383
+   }
   },
   "245793479": {
    "target_id": 245793479,
@@ -13470,7 +14542,11 @@
    "status": "ok",
    "sample_file": "t245793479.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 93.79
+   "t_total": 93.79,
+   "geometry_repair_v3": {
+    "v_shape": 0.9920063422867965,
+    "secondary_ratio": 0.13538966986253317
+   }
   },
   "350934357": {
    "target_id": 350934357,
@@ -13525,7 +14601,11 @@
    "status": "ok",
    "sample_file": "t350934357.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 194.79
+   "t_total": 194.79,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.047629919892259905
+   }
   },
   "160222069": {
    "target_id": 160222069,
@@ -13586,12 +14666,16 @@
    "status": "ok",
    "sample_file": "t160222069.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 127.92
+   "t_total": 127.92,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.3250861223386494
+   }
   },
   "420446142": {
    "target_id": 420446142,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-3990.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -13656,7 +14740,11 @@
    "status": "ok",
    "sample_file": "t420446142.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 135.15
+   "t_total": 135.15,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.038991685548914384
+   }
   },
   "8599009": {
    "target_id": 8599009,
@@ -13715,7 +14803,11 @@
    "status": "ok",
    "sample_file": "t8599009.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 74.43
+   "t_total": 74.43,
+   "geometry_repair_v3": {
+    "v_shape": 0.3797035428191064,
+    "secondary_ratio": -0.018487849830773236
+   }
   },
   "284305328": {
    "target_id": 284305328,
@@ -13776,7 +14868,11 @@
    "status": "ok",
    "sample_file": "t284305328.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 81.66
+   "t_total": 81.66,
+   "geometry_repair_v3": {
+    "v_shape": 0.3557819036901506,
+    "secondary_ratio": 0.013304114552345127
+   }
   },
   "193628179": {
    "target_id": 193628179,
@@ -13846,7 +14942,11 @@
    "status": "ok",
    "sample_file": "t193628179.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 96.85
+   "t_total": 96.85,
+   "geometry_repair_v3": {
+    "v_shape": 0.2592239251766484,
+    "secondary_ratio": 0.9266313514119423
+   }
   },
   "250977648": {
    "target_id": 250977648,
@@ -13915,7 +15015,11 @@
    "status": "ok",
    "sample_file": "t250977648.npz",
    "scalars_finite_frac": 0.8787878787878788,
-   "t_total": 80.42
+   "t_total": 80.42,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.12455958305417034
+   }
   },
   "354151219": {
    "target_id": 354151219,
@@ -13983,7 +15087,11 @@
    "status": "ok",
    "sample_file": "t354151219.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 84.09
+   "t_total": 84.09,
+   "geometry_repair_v3": {
+    "v_shape": 0.022541463159569435,
+    "secondary_ratio": 0.11595086080184541
+   }
   },
   "198616607": {
    "target_id": 198616607,
@@ -14050,11 +15158,15 @@
    },
    "t_features": 0.02,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=0.56 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t198616607.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 162.62
+   "t_total": 162.62,
+   "geometry_repair_v3": {
+    "v_shape": 0.5563043075381681,
+    "secondary_ratio": 0.19220725833786237
+   }
   },
   "66151343": {
    "target_id": 66151343,
@@ -14124,7 +15236,11 @@
    "status": "ok",
    "sample_file": "t66151343.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 125.53
+   "t_total": 125.53,
+   "geometry_repair_v3": {
+    "v_shape": 0.4929661956498779,
+    "secondary_ratio": 0.014278578719465501
+   }
   },
   "374778982": {
    "target_id": 374778982,
@@ -14192,12 +15308,16 @@
    "status": "ok",
    "sample_file": "t374778982.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 92.64
+   "t_total": 92.64,
+   "geometry_repair_v3": {
+    "v_shape": 0.47428640426449825,
+    "secondary_ratio": 0.07387188924910638
+   }
   },
   "426017070": {
    "target_id": 426017070,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-4181.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -14263,7 +15383,11 @@
    "status": "ok",
    "sample_file": "t426017070.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 200.14
+   "t_total": 200.14,
+   "geometry_repair_v3": {
+    "v_shape": 0.18427489324138166,
+    "secondary_ratio": 0.7543346398745742
+   }
   },
   "175604949": {
    "target_id": 175604949,
@@ -14320,7 +15444,12 @@
    "status": "ok",
    "sample_file": "t175604949.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 176.59
+   "t_total": 176.59,
+   "geometry_repair_v3": {
+    "v_shape": null,
+    "secondary_ratio": null,
+    "note": "light curve not downloadable from MAST (DownloadError, 2026-10-25); geometry features set to NaN (not measured) instead of keeping values from the defective pre-v3 method"
+   }
   },
   "267484653": {
    "target_id": 267484653,
@@ -14390,7 +15519,11 @@
    "status": "ok",
    "sample_file": "t267484653.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 197.23
+   "t_total": 197.23,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.13731650950805388
+   }
   },
   "77102895": {
    "target_id": 77102895,
@@ -14450,7 +15583,11 @@
    "status": "ok",
    "sample_file": "t77102895.npz",
    "scalars_finite_frac": 0.9393939393939394,
-   "t_total": 203.04
+   "t_total": 203.04,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.012928668497847438
+   }
   },
   "61687533": {
    "target_id": 61687533,
@@ -14518,7 +15655,11 @@
    "status": "ok",
    "sample_file": "t61687533.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 136.87
+   "t_total": 136.87,
+   "geometry_repair_v3": {
+    "v_shape": 0.3065494328323271,
+    "secondary_ratio": 0.07948126924046517
+   }
   },
   "470974162": {
    "target_id": 470974162,
@@ -14586,7 +15727,11 @@
    "status": "ok",
    "sample_file": "t470974162.npz",
    "scalars_finite_frac": 1.0,
-   "t_total": 41.3
+   "t_total": 41.3,
+   "geometry_repair_v3": {
+    "v_shape": 0.2861502460951609,
+    "secondary_ratio": 0.05684157216542625
+   }
   },
   "159334269": {
    "target_id": 159334269,
@@ -14645,11 +15790,15 @@
    },
    "t_features": 0.01,
    "feature_warnings": [],
-   "label_note": "grazing subtype: v_shape=1.00 >= 0.45 on the folded light curve (base disposition EB)",
+   "label_note": "grazing subtype: v_shape=0.47 >= 0.45 on the folded light curve (base disposition EB); geometry repair v3",
    "status": "ok",
    "sample_file": "t159334269.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 87.64
+   "t_total": 87.64,
+   "geometry_repair_v3": {
+    "v_shape": 0.466859149058292,
+    "secondary_ratio": -0.04764296743257799
+   }
   },
   "453105377": {
    "target_id": 453105377,
@@ -14709,7 +15858,11 @@
    "status": "ok",
    "sample_file": "t453105377.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 125.81
+   "t_total": 125.81,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": -0.392559909785698
+   }
   },
   "461080504": {
    "target_id": 461080504,
@@ -14769,12 +15922,16 @@
    "status": "ok",
    "sample_file": "t461080504.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 307.85
+   "t_total": 307.85,
+   "geometry_repair_v3": {
+    "v_shape": 0.3089523702154316,
+    "secondary_ratio": -0.1433188804611352
+   }
   },
   "268371979": {
    "target_id": 268371979,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-977.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -14838,7 +15995,11 @@
    "status": "ok",
    "sample_file": "t268371979.npz",
    "scalars_finite_frac": 0.8484848484848485,
-   "t_total": 59.89
+   "t_total": 59.89,
+   "geometry_repair_v3": {
+    "v_shape": 0.4021635120618994,
+    "secondary_ratio": 0.138541928431652
+   }
   },
   "446918603": {
    "target_id": 446918603,
@@ -14908,7 +16069,11 @@
    "status": "ok",
    "sample_file": "t446918603.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 423.74
+   "t_total": 423.74,
+   "geometry_repair_v3": {
+    "v_shape": 0.05419788615091684,
+    "secondary_ratio": 0.029221546866587123
+   }
   },
   "252636888": {
    "target_id": 252636888,
@@ -14931,8 +16096,8 @@
   },
   "177126182": {
    "target_id": 177126182,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-982.01",
    "label_source": "exofop:TESS Disposition",
@@ -14988,7 +16153,11 @@
    "status": "ok",
    "sample_file": "t177126182.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 84.5
+   "t_total": 84.5,
+   "geometry_repair_v3": {
+    "v_shape": 0.28020624972086683,
+    "secondary_ratio": 0.08854610791876856
+   }
   },
   "167654347": {
    "target_id": 167654347,
@@ -15052,7 +16221,11 @@
    "status": "ok",
    "sample_file": "t167654347.npz",
    "scalars_finite_frac": 0.7272727272727273,
-   "t_total": 304.4
+   "t_total": 304.4,
+   "geometry_repair_v3": {
+    "v_shape": NaN,
+    "secondary_ratio": 0.12965557378798676
+   }
   },
   "146244533": {
    "target_id": 146244533,
@@ -15119,7 +16292,11 @@
    "status": "ok",
    "sample_file": "t146244533.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 233.26
+   "t_total": 233.26,
+   "geometry_repair_v3": {
+    "v_shape": 0.39931232535333744,
+    "secondary_ratio": -0.014775819603363544
+   }
   },
   "412259468": {
    "target_id": 412259468,
@@ -15188,12 +16365,16 @@
    "status": "ok",
    "sample_file": "t412259468.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 154.28
+   "t_total": 154.28,
+   "geometry_repair_v3": {
+    "v_shape": 0.9999275374913198,
+    "secondary_ratio": 0.005570346453211248
+   }
   },
   "312469860": {
    "target_id": 312469860,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-1530.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -15260,7 +16441,11 @@
    "status": "ok",
    "sample_file": "t312469860.npz",
    "scalars_finite_frac": 0.7272727272727273,
-   "t_total": 223.55
+   "t_total": 223.55,
+   "geometry_repair_v3": {
+    "v_shape": 0.17148069503924832,
+    "secondary_ratio": 0.9293867436985194
+   }
   },
   "460316238": {
    "target_id": 460316238,
@@ -15319,7 +16504,11 @@
    "status": "ok",
    "sample_file": "t460316238.npz",
    "scalars_finite_frac": 0.9090909090909091,
-   "t_total": 375.7
+   "t_total": 375.7,
+   "geometry_repair_v3": {
+    "v_shape": 0.14981403035923938,
+    "secondary_ratio": 0.006298487515537054
+   }
   },
   "23113034": {
    "target_id": 23113034,
@@ -15387,12 +16576,16 @@
    "status": "ok",
    "sample_file": "t23113034.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 119.42
+   "t_total": 119.42,
+   "geometry_repair_v3": {
+    "v_shape": 0.4332333412151866,
+    "secondary_ratio": -0.013927078282562901
+   }
   },
   "312259170": {
    "target_id": 312259170,
-   "label": 2,
-   "label_name": "grazing_eclipsing_binary",
+   "label": 1,
+   "label_name": "eclipsing_binary",
    "quota_key": "eb",
    "toi_label": "TOI-1529.01",
    "label_source": "exofop:TFOPWG FP + comment keyword",
@@ -15447,7 +16640,11 @@
    "status": "ok",
    "sample_file": "t312259170.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 191.16
+   "t_total": 191.16,
+   "geometry_repair_v3": {
+    "v_shape": 0.36927365215259034,
+    "secondary_ratio": 0.018221057778784064
+   }
   },
   "209054294": {
    "target_id": 209054294,
@@ -15516,7 +16713,11 @@
    "status": "ok",
    "sample_file": "t209054294.npz",
    "scalars_finite_frac": 0.9696969696969697,
-   "t_total": 409.47
+   "t_total": 409.47,
+   "geometry_repair_v3": {
+    "v_shape": 0.3066941193649473,
+    "secondary_ratio": 0.0840213836784996
+   }
   }
  },
  "quotas": {
@@ -15525,5 +16726,5 @@
   "blend": 60,
   "systematic": 70
  },
- "updated": "2026-10-13T06:16:08Z"
+ "updated": "2026-10-25T08:08:40Z"
 }

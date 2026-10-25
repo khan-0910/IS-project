@@ -24,10 +24,12 @@ from exovet.training import prepare as P
 
 SEED = 13
 LR = 3e-4
-WEIGHT_DECAY = 1e-4
+WEIGHT_DECAY = 3e-4
 BATCH = 16
 MAX_EPOCHS = 80
 PATIENCE = 12
+MIN_DELTA = 0.002   # val macro-F1 must improve by this much to reset patience
+LABEL_SMOOTHING = 0.05
 
 
 class ViewDataset(Dataset):
@@ -103,7 +105,8 @@ def train(dataset_dir=None, out_path=None, max_epochs: int = MAX_EPOCHS,
     n_scalars = prepared["data"]["scalars"].shape[1]
     model = ExoVetTransformer(n_scalars=n_scalars)
     weights = torch.from_numpy(prepared["class_weights"])
-    criterion = nn.CrossEntropyLoss(weight=weights)
+    criterion = nn.CrossEntropyLoss(weight=weights,
+                                    label_smoothing=LABEL_SMOOTHING)
     opt = torch.optim.AdamW(model.parameters(), lr=LR,
                             weight_decay=WEIGHT_DECAY)
     sched = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -138,7 +141,7 @@ def train(dataset_dir=None, out_path=None, max_epochs: int = MAX_EPOCHS,
         if verbose:
             print(f"epoch {epoch:3d}  loss {tot / max(n, 1):.4f}  "
                   f"val macroF1 {val_f1:.3f}")
-        if val_f1 > best_f1 + 1e-4:
+        if val_f1 > best_f1 + MIN_DELTA:
             best_f1, bad = val_f1, 0
             best_state = {k: v.clone() for k, v in model.state_dict().items()}
         else:

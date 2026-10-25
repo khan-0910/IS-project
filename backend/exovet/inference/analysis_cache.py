@@ -25,8 +25,16 @@ from exovet.config import settings
 from exovet.utils.jsonio import finite_json, read_json
 
 
-CACHE_SCHEMA = 5  # bump to invalidate entries produced by older report shapes
-                  # (5: low-realization period-suspect warning, 2026-10-06;
+CACHE_SCHEMA = 9  # bump to invalidate entries produced by older report shapes
+                  # (9: v_shape-fixed model restored (Tmag/dist_pc used again)
+                  #     with OOD training ranges stamped in, 2026-10-25;
+                  #  8: Tmag/dist_pc masked from classifier + OOD flag,
+                  #     2026-10-25;
+                  #  7: trapezoid-fit v_shape feature + retrained model,
+                  #     2026-10-25;
+                  #  6: gap-aware mean-flux event realization + binned
+                  #     folded T14, 2026-10-25;
+                  #  5: low-realization period-suspect warning, 2026-10-06;
                   #  4: search-window fit + new report fields;
                   #  3: harmonic scan + per-event-baseline MCMC)
 

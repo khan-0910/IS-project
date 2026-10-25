@@ -316,6 +316,14 @@ def model_card():
                   "model_config", "history")}))
     payload["trained"] = True
     payload["checkpoint"] = str(ckpt)
+    # the served prediction is the val-tuned blend, so its audited test score
+    # (ensemble.json) belongs on the model card next to the Transformer's own
+    ens_path = settings.MODEL_DIR / "ensemble.json"
+    if ens_path.exists():
+        ens = json.loads(ens_path.read_text(encoding="utf-8"))
+        payload["ensemble"] = {k: ens.get(k) for k in (
+            "type", "weight_transformer", "tuned_on", "val_macro_f1",
+            "test_macro_f1", "created_at")}
     return payload
 
 

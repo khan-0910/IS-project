@@ -4,245 +4,155 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import TopBar from "../../components/TopBar";
 import Explain from "../../components/Explain";
+import { API, CLASS_COLOR, PageGuide, Stat } from "../../components/ui";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-/* Pipeline steps in plain-English primer form. Each has WHY/HOW *optional* —
-   the headline sentence alone is enough for a first read. */
 const STAGES = [
   {
-    t: "OBSERVE",
-    d: "We start with measurements of a star's brightness over time.",
-    why: "A planet crossing in front of its star makes it look very slightly dimmer, once per orbit. Finding those tiny repeating dips is how planet hunting starts.",
-    how: "Real 2-minute cadence photometry is retrieved from the MAST archive (via lightkurve), with sector caps and full provenance.",
+    t: "Observe", c: "var(--sky)",
+    d: "Real TESS photometry of the star is downloaded from NASA's MAST archive, sector by sector.",
+    why: "A planet crossing its star dims it very slightly once per orbit — finding those repeating dips is how transit searches start.",
+    how: "lightkurve fetches every available 2-minute (or longer) light curve; quality-flagged cadences are masked; the bundle is cached in data/cache/tic_<id>/ with a provenance manifest (sectors, download time, saved_at stamp).",
   },
   {
-    t: "CLEAN",
-    d: "We remove long-term trends and unwanted noise.",
-    why: "The spacecraft drifts, stars vary slowly, and instruments bias the signal. The transit itself is a tiny dip that would otherwise drown in those slow changes.",
-    how: "Quality flags are applied, only upward spikes are clipped (real dips are never removed), and a robust biweight filter removes long-term instrumental trends while preserving transit shapes.",
+    t: "Clean", c: "var(--mint)",
+    d: "Slow drifts and bad points are removed while real dips are protected.",
+    why: "Spacecraft pointing jitter, scattered light and stellar rotation change brightness far more than a transit does.",
+    how: "NaNs and bad quality flags are dropped, only upward outliers are sigma-clipped (dips are never clipped), and a wotan biweight filter with a 0.75-day window — longer than any transit — estimates the trend, which is divided out.",
   },
   {
-    t: "SEARCH",
-    d: "We look for repeating dips that could be caused by a transit.",
-    why: "A real planet repeats its dip once every orbit — a random artifact will not. Searching for periodicity separates real signals from noise.",
-    how: "Transit Least Squares scans trial periods from 0.5 to 30 days, scoring how well a boxy transit matches at each period.",
+    t: "Search", c: "var(--lav)",
+    d: "Transit Least Squares tests thousands of trial periods for a repeating, transit-shaped dip.",
+    why: "A real orbit repeats exactly; noise and one-off artifacts do not.",
+    how: "TLS slides a limb-darkened transit template over periods of 0.5–30 days and reports the best period, epoch, duration, depth, SNR and the Signal Detection Efficiency (SDE ≥ 7 = significant).",
   },
   {
-    t: "CHECK",
-    d: "We test whether the detected pattern is actually consistent.",
-    why: "A false period can make unrelated dips appear to line up, and TLS sometimes locks onto an exact fraction of the true period — the fold looks perfect but is wrong.",
-    how: "EXOVET checks that predicted transit epochs are actually observed (event realization) and compares harmonic multiples before accepting a period.",
+    t: "Check", c: "var(--butter)",
+    d: "The period is stress-tested so a fraction of the true period is not reported by mistake.",
+    why: "At P/2 or P/3 every real transit still lines up in the fold, so the folded curve alone looks perfect.",
+    how: "Event realization: for each covered epoch the mean in-transit flux must drop by at least half the depth (above its own noise). A true period realizes nearly all epochs, an alias about 1/N. The harmonic scan then tests 2P, 3P … and switches only with periodogram support plus full realization.",
   },
   {
-    t: "CLASSIFY",
-    d: "AI compares the signal with known types of astronomical events.",
-    why: "Not every repeating dip is a planet — eclipsing binary stars, blends of nearby stars, and spacecraft artifacts can look similar.",
-    how: "A small Transformer reads three views of the light curve plus 33 measured features and sorts the signal into five physical scenarios. Repeated stochastic passes (MC Dropout) estimate how sure the model is.",
+    t: "Classify", c: "var(--peach)",
+    d: "A small Transformer ranks five physical explanations and measures its own uncertainty.",
+    why: "Eclipsing binaries, blended neighbours and instrument artifacts all imitate planets.",
+    how: "Three views (whole light curve, zoom on each event, phase fold) plus 33 engineered features feed a 4-layer Transformer; its probabilities are blended with a logistic-regression head tuned on validation only. MC-Dropout runs 60 stochastic passes: margin < 0.10 → ambiguous, any class std > 0.15 → unstable.",
   },
   {
-    t: "EXPLAIN",
-    d: "EXOVET shows the evidence, uncertainty, and fitted transit.",
-    why: "A trustworthy result shows its work: how confident, why, and what the physical model says.",
-    how: "Attention rollout shows where the model looked (a diagnostic, not a causal explanation); a batman transit model fitted with emcee MCMC gives posterior uncertainties on planet radius and orbit (Full mode).",
+    t: "Explain", c: "var(--rose)",
+    d: "A physical transit model is fitted and everything is written to a traceable report.",
+    why: "Numbers you can trust come with their uncertainty and their provenance.",
+    how: "batman generates the transit light curve; emcee MCMC samples Rp/R★, a/R★, impact parameter, mid-time and limb darkening. The report JSON is stored under data/results/ and a Markdown copy is generated from that same file.",
   },
 ];
 
-const CLASSES = [
-  ["PLANET CANDIDATE", "A transit-shaped dip consistent with a planet crossing the star. Note: candidate — not a confirmed planet."],
-  ["ECLIPSING BINARY", "A second star orbiting the target — the dips are stellar eclipses, not planets."],
-  ["GRAZING ECLIPSING BINARY", "An eclipsing binary seen edge-on so the eclipses only barely overlap (V-shaped)."],
-  ["CONTAMINATION / BLEND", "The dip belongs to a nearby star whose light is mixed into the same pixels."],
-  ["INSTRUMENTAL / SYSTEMATIC", "The dip is an artifact of the spacecraft or data processing, not an astrophysical event."],
+const CLASSES: [string, string, string][] = [
+  ["planet_candidate", "Planet candidate", "A flat-bottomed, shallow, repeating dip consistent with a planet. A candidate — not a confirmed planet."],
+  ["eclipsing_binary", "Eclipsing binary", "Two stars eclipsing each other: deep dips, often alternating odd/even depths and a secondary eclipse at phase 0.5."],
+  ["grazing_eclipsing_binary", "Grazing eclipsing binary", "Two stars that only clip each other's edge: shallow but V-shaped dips that can mimic a planet."],
+  ["contamination_blend", "Contamination / blend", "The dip is real but belongs to a neighbouring star whose light leaks into the same pixels."],
+  ["instrumental_systematic", "Instrumental / systematic", "Spacecraft or processing artifacts — momentum dumps, scattered light, sector edges."],
+];
+
+interface ModelCard {
+  trained?: boolean;
+  trained_at?: string;
+  metrics?: { val_macro_f1?: number; test?: { macro_f1?: number; accuracy?: number } };
+  dataset?: { n_train?: number; n_val?: number; n_test?: number; train_class_counts?: number[] };
+  ensemble?: { test_macro_f1?: { transformer?: number; logreg?: number; blend?: number } };
+}
+interface Run { generated_at: string; n_targets: number; accuracy_strict?: number | null; accuracy_relaxed?: number | null; macro_f1?: number | null; ambiguous_pct?: number | null }
+
+const GUIDE: [string, string][] = [
+  ["Analyze a star →", "Opens the Analyze workspace."],
+  ["See model validation →", "Opens the Verify page with scored batch runs."],
+  ["WHY? / HOW?", "Expands the reasoning and the exact method for each pipeline step."],
 ];
 
 export default function AboutPage() {
-  const [model, setModel] = useState<{
-    trained?: boolean;
-    metrics?: { test?: { macro_f1?: number } };
-    dataset?: { n_train?: number };
-    trained_at?: string;
-  } | null>(null);
+  const [model, setModel] = useState<ModelCard | null>(null);
+  const [run, setRun] = useState<Run | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/api/model`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setModel)
-      .catch(() => {});
+    fetch(`${API}/api/model`).then((r) => (r.ok ? r.json() : null)).then(setModel).catch(() => {});
+    fetch(`${API}/api/verify/results`).then((r) => (r.ok ? r.json() : null)).then((b) => setRun(b?.runs?.[0] ?? null)).catch(() => {});
   }, []);
 
+  const ds = model?.dataset;
   return (
     <div className="shell">
-      <TopBar status="ONLINE" />
-      <div className="page" style={{ flexDirection: "column", maxWidth: 980 }}>
-
-        {/* -------- WHAT IS EXOVET? -------- */}
-        <div className="sect" style={{ borderTop: 0 }}>
-          <div className="sect-head">
-            <span className="label m">WHAT IS EXOVET?</span>
-          </div>
-          <p className="statement" style={{ marginTop: 4 }}>
-            EXOVET is a software system that looks for possible exoplanets by
-            studying tiny changes in the brightness of stars.
+      <TopBar />
+      <main className="page narrow">
+        <section>
+          <div className="eyebrow">About EXOVET</div>
+          <h1 className="h-display mt12" style={{ fontSize: "clamp(34px,5vw,52px)" }}>
+            An honest instrument for <span className="soft">noisy starlight.</span>
+          </h1>
+          <p className="lead mt16">
+            EXOVET looks for possible exoplanets in real TESS light curves, decides what most likely caused each dip, and
+            reports how sure it is. Every number on screen is read from a report file the pipeline wrote to disk.
           </p>
-          <p className="note" style={{ marginTop: 12, fontSize: 15.5 }}>
-            Give it a star's catalog number and it retrieves real observations
-            from NASA's TESS telescope, searches for the subtle dips caused by
-            planet crossings, checks that the pattern is real, uses AI to judge
-            what probably caused it, and reports how confident it is. Every
-            number is traceable to the exact code, data and configuration that
-            produced it.
-          </p>
-          <div style={{ marginTop: 16, display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <Link className="tab" href="/analyze" style={{ color: "var(--accent)", borderColor: "var(--accent-dim)" }}>
-              TRY IT — ANALYZE A STAR →
-            </Link>
-            <Link className="tab" href="/verify">
-              SEE MODEL VALIDATION →
-            </Link>
+          <div className="row mt16">
+            <Link className="btn" href="/analyze" data-tip="Open the six-stage analysis workspace.">Analyze a star →</Link>
+            <Link className="btn btn-ghost" href="/verify" data-tip="See how the model scores against ExoFOP ground truth.">See model validation →</Link>
           </div>
-        </div>
+        </section>
 
-        {/* -------- WHY IS THIS HARD? -------- */}
-        <div className="sect">
-          <div className="sect-head">
-            <span className="label m">WHY IS THIS HARD?</span>
-          </div>
-          <Explain
-            why="The dip a planet causes is tiny — often well under 1% of the star's light — and it is buried in instrument noise, stellar variability, and spacecraft drifts. Many things other than planets cause similar dips: eclipsing binary stars, blends of nearby stars, even data glitches."
-            how="EXOVET works the way a careful astronomer would: it cleans the data, searches for periodic signals, tests whether the period holds up, then asks AI to judge what kind of signal it is — and reports honest uncertainty, including when the signal is genuinely ambiguous."
-            tech={
-              <>
-                The pipeline (exovet package): ingest via lightkurve → wotan
-                biweight detrending → Transit Least Squares scan → harmonic
-                validation (event realization) → 33 engineered features →
-                Transformer classifier with MC-Dropout uncertainty → optional
-                batman + emcee MCMC transit fit.
-              </>
-            }
-          />
-        </div>
-
-        {/* -------- WHAT DOES EXOVET DO? (pipeline) -------- */}
-        <div className="sect">
-          <div className="sect-head">
-            <span className="label m">WHAT DOES EXOVET DO? — HOW THE PIPELINE WORKS</span>
-            <span className="sub">SIMPLE BY DEFAULT · DETAILED ON DEMAND</span>
-          </div>
-          {STAGES.map((s, i) => (
-            <div className="stage" key={s.t}>
-              <span className="no">{String(i + 1).padStart(2, "0")}</span>
-              <div>
-                <div className="t">{s.t}</div>
-                <div className="d">{s.d}</div>
-                <Explain why={s.why} how={s.how} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* -------- THE FIVE CLASSES -------- */}
-        <div className="sect">
-          <div className="sect-head">
-            <span className="label m">THE FIVE CLASSES</span>
-          </div>
-          <table className="readouts">
-            <tbody>
-              {CLASSES.map(([k, v]) => (
-                <tr key={k}>
-                  <td className="k">{k}</td>
-                  <td className="v" style={{ color: "var(--muted)", whiteSpace: "normal" }}>{v}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* -------- MODEL -------- */}
-        <div className="sect">
-          <div className="sect-head">
-            <span className="label m">MODEL</span>
-          </div>
-          <table className="readouts">
-            <tbody>
-              <tr>
-                <td className="k">TRAINED</td>
-                <td className="v">{model?.trained ? "YES" : "NO — classification unavailable until a checkpoint is trained"}</td>
-              </tr>
-              {model?.trained_at && (
-                <tr>
-                  <td className="k">TRAINED AT</td>
-                  <td className="v">{model.trained_at.slice(0, 10)}</td>
-                </tr>
-              )}
-              {model?.dataset?.n_train != null && (
-                <tr>
-                  <td className="k">TRAINING TARGETS</td>
-                  <td className="v">{model.dataset.n_train}</td>
-                </tr>
-              )}
-              {model?.metrics?.test?.macro_f1 != null && (
-                <tr>
-                  <td className="k">TEST MACRO-F1</td>
-                  <td className="v">{model.metrics.test.macro_f1.toFixed(3)}</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* -------- honest limitations -------- */}
-        <div className="sect" style={{ borderColor: "var(--warn)" }}>
-          <div className="sect-head">
-            <span className="label m" style={{ color: "var(--warn)" }}>
-              CURRENT LIMITATIONS — REPORTED HONESTLY
-            </span>
-          </div>
-          <p className="note" style={{ margin: "4px 0 10px", maxWidth: "80ch" }}>
-            The pilot verification run (25 targets with ExoFOP ground truth)
-            measured the model as it is. These numbers are not hidden:
-          </p>
-          <div className="sysgrid" style={{ marginBottom: 12 }}>
-            {[
-              ["STRICT ACCURACY", "20%"],
-              ["RELAXED ACCURACY", "28%"],
-              ["MACRO F1", "0.31"],
-              ["AMBIGUOUS PREDICTIONS", "64%"],
-              ["PLANET-CANDIDATE RECALL", "0%"],
-              ["SYSTEMATIC-CLASS RECALL", "0%"],
-            ].map(([k, v]) => (
-              <div key={k}>
-                <div className="label">{k}</div>
-                <div className="num" style={{ fontSize: 16, marginTop: 8, color: "var(--warn)" }}>{v}</div>
+        <section className="card">
+          <div className="card-head"><h2 className="h2">How the pipeline works</h2><span className="sub">simple first · detail on demand</span></div>
+          <div className="pipeline-list">
+            {STAGES.map((s, i) => (
+              <div className="pl-item" key={s.t}>
+                <span className="no" style={{ background: s.c }}>{String(i + 1).padStart(2, "0")}</span>
+                <div>
+                  <div className="t">{s.t}</div>
+                  <div className="d">{s.d}</div>
+                  <Explain why={s.why} how={s.how} />
+                </div>
               </div>
             ))}
           </div>
-          <p className="note" style={{ margin: 0, maxWidth: "80ch" }}>
-            What this means: the transit <i>detection</i> stage is strong —
-            measured orbital periods agree with the catalog to better than
-            0.2% on almost every target — but the <i>classification</i> model
-            is under-trained. Planet candidates are frequently mislabeled as
-            eclipsing binaries, and instrumental/systematic examples are too
-            rare in the training set to be recognized. Ambiguous verdicts are
-            flagged as ambiguous rather than smoothed over; the VERIFY page
-            reports the full error analysis and what to do about it.
-          </p>
-        </div>
+        </section>
 
-        <div className="sect">
-          <div className="sect-head">
-            <span className="label m">REPRODUCIBILITY</span>
+        <section className="card">
+          <div className="card-head"><h2 className="h2">The five classes</h2></div>
+          <div className="stack" style={{ gap: 10 }}>
+            {CLASSES.map(([id, name, d]) => (
+              <div key={id} className="row" style={{ alignItems: "flex-start", flexWrap: "nowrap" }}>
+                <span className="swatch" style={{ background: CLASS_COLOR[id], width: 12, height: 12, marginTop: 6 }} />
+                <div><b>{name}</b><div className="note">{d}</div></div>
+              </div>
+            ))}
           </div>
-          <p className="note" style={{ margin: 0, maxWidth: "80ch" }}>
-            Every report carries a versions block (pipeline version +
-            configuration hash, model checkpoint identity, data source) and is
-            stored verbatim under <code>data/results/</code>. Cached results
-            are keyed by target + configuration + model version, so a
-            configuration change invalidates old cached numbers rather than
-            silently reusing them.
+        </section>
+
+        <section className="card tint-butter">
+          <div className="card-head"><h2 className="h2">Current limitations — stated plainly</h2></div>
+          <div className="stats">
+            <Stat k="Training targets" v={ds?.n_train ?? "—"} s={ds?.train_class_counts ? `per class ${ds.train_class_counts.join(" / ")}` : undefined} />
+            <Stat k="Test macro-F1 · served blend" v={model?.ensemble?.test_macro_f1?.blend != null ? model.ensemble.test_macro_f1.blend.toFixed(3) : "—"} s={`n = ${ds?.n_test ?? "?"} · ±0.1 noise`} color="var(--butter)" />
+            <Stat k="Transformer alone" v={model?.metrics?.test?.macro_f1 != null ? model.metrics.test.macro_f1.toFixed(3) : "—"} s={model?.ensemble?.test_macro_f1?.logreg != null ? `logistic head alone ${model.ensemble.test_macro_f1.logreg.toFixed(3)}` : undefined} />
+            <Stat k="Latest batch · strict" v={run?.accuracy_strict != null ? `${(run.accuracy_strict * 100).toFixed(0)}%` : "—"} s={run ? `${run.n_targets} targets · ${run.generated_at.slice(0, 10)}` : "no stored run"} />
+            <Stat k="Latest batch · ambiguous" v={run?.ambiguous_pct != null ? `${run.ambiguous_pct.toFixed(0)}%` : "—"} />
+          </div>
+          <p className="note mt16">
+            Detection is the strong part: measured periods match catalog periods closely. Classification is data-limited — a few
+            hundred labelled stars, very few non-grazing eclipsing binaries in training, and a 45-target test set whose macro-F1 moves
+            by about ±0.1 from sampling alone. Ambiguous verdicts are shown as ambiguous; treat the class as a vetting hint and the
+            period, depth and fitted radius ratio as the measurements.
           </p>
-        </div>
-      </div>
+        </section>
+
+        <section className="card">
+          <div className="card-head"><h2 className="h2">Reproducibility</h2></div>
+          <p className="note" style={{ margin: 0 }}>
+            Each report carries a versions block (pipeline version, configuration SHA, model checkpoint id, data source) and is stored
+            verbatim in <code>data/results/</code>. The analysis cache key covers the target, mode, configuration, model checkpoint
+            (including its file time) and the data download stamp, so any change that could alter a result produces a fresh run.
+          </p>
+        </section>
+
+        <PageGuide items={GUIDE} />
+      </main>
     </div>
   );
 }

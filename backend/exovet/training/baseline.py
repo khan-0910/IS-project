@@ -77,12 +77,34 @@ def run_baseline(dataset_dir=None, out_path=None) -> dict:
         "models": {},
     }
 
-    # fit scaler on train only, then refit val into train for the final model
+    # Stage A — val-based model selection. Every candidate is fitted on the
+    # TRAIN split only, so the selection is fair against the Transformer
+    # (which also never sees val during scoring), then the winner is refit on
+    # train+val for the production test number reported below.
+    val_selection: dict = {}
+    best_val_name, best_val_f1 = None, -1.0
+    for name, model in _models().items():
+        model.fit(tr["scalars"], tr["y"])
+        val_f1 = float(f1_score(va["y"], model.predict(va["scalars"]),
+                                average="macro", zero_division=0))
+        val_selection[name] = {"val_macro_f1": round(val_f1, 4)}
+        if val_f1 > best_val_f1:
+            best_val_f1, best_val_name = val_f1, name
+    results["val_selection"] = {
+        **val_selection, "best_on_val": best_val_name,
+        "note": "train-only fits, val-only scoring — directly comparable to "
+                "the Transformer, which is likewise selected on val and "
+                "trained without val",
+    }
+
+    # Stage B — production refit of the val-selected winner on train+val.
     X_tr = np.vstack([tr["scalars"], va["scalars"]])
     y_tr = np.concatenate([tr["y"], va["y"]])
 
-    best_name, best_f1 = None, -1.0
+    best_name, best_f1 = best_val_name, -1.0
     for name, model in _models().items():
+        if name != best_val_name:
+            continue
         t0 = time.time()
         model.fit(X_tr, y_tr)
         pred = model.predict(te["scalars"])

@@ -92,6 +92,12 @@ TLS_MAX_SPAN_DAYS = 90   # analysis window cap: TLS cost explodes with time
                          # total time span fits this cap is searched; the
                          # selection is recorded in the report.
 TLS_MAX_SECTORS = 6      # hard cap on sectors inside one search window
+TLS_MAX_CONCURRENT = 1   # process-wide cap on simultaneous TLS searches.
+                         # Each search already fans out one worker process
+                         # per CPU core, so N concurrent jobs (a verify batch
+                         # plus a single analysis) multiply memory by N and
+                         # exhausted 16 GB in practice (MemoryError inside
+                         # TLS). Queuing costs little throughput.
 
 # --------------------------------------------------------------------------
 # Features / model input
@@ -125,6 +131,20 @@ CLASS_SHORT = {
 # --------------------------------------------------------------------------
 # Inference / uncertainty / fitting
 # --------------------------------------------------------------------------
+# Scalar features masked out of the classifier (set to the training mean,
+# z = 0, in transform_scalars). Empty in the served model. Masking the
+# catalog-selection features ("Tmag", "dist_pc") was tried on 2026-10-25:
+# in the labelled set eclipsing binaries are brighter/nearer than planet
+# candidates by selection, and the model learned "bright -> EB" (Pi Men,
+# Tmag 5.1, got +3 logits to EB). The masked model was worse on the
+# 16-target ExoFOP batch (strict 62.5% -> 44%, all 4 planets missed), so the
+# served model uses them and relies on the out-of-distribution flag below
+# to mark stars like Pi Men instead. The mask is stored in each checkpoint.
+CLASSIFIER_EXCLUDED_SCALARS: tuple[str, ...] = ()
+# Out-of-distribution flag: a classifier input outside the training range
+# AND more than this many training standard deviations from the mean.
+OOD_MIN_Z = 3.0
+
 MC_DROPOUT_PASSES = 60
 MC_AMBIGUITY_MARGIN = 0.10      # top-1 vs top-2 closer than this => ambiguous
 MC_MAX_PRED_STD = 0.15          # dispersion above this => unstable

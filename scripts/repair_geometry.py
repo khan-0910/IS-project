@@ -26,7 +26,7 @@ from exovet.features.engineering import (  # noqa: E402
     SCALAR_NAMES, secondary_depth_ratio, v_shape_metric)
 from exovet.preprocessing.clean import preprocess  # noqa: E402
 
-REPAIR_TAG = "geometry_repair_v2"
+REPAIR_TAG = "geometry_repair_v3"  # v3: trapezoid-fit v_shape (2026-10-25)
 
 
 def repair_target(tid: int, rec: dict) -> dict:
@@ -97,7 +97,7 @@ def repair_target(tid: int, rec: dict) -> dict:
     if label == 2:
         rec["label_note"] = (
             f"grazing subtype: v_shape={scalars['v_shape']:.2f} >= 0.45 on "
-            "the folded light curve (base disposition EB); geometry repair v2")
+            "the folded light curve (base disposition EB); geometry repair v3")
     rec[REPAIR_TAG] = {
         "v_shape": scalars["v_shape"],
         "secondary_ratio": scalars["secondary_ratio"],

@@ -141,6 +141,15 @@ def _why(rec: dict, gt: dict | None) -> list[dict]:
                     f"{settings.MC_MAX_PRED_STD} (MC_MAX_PRED_STD)",
         })
 
+    ood = cls.get("ood") or {}
+    if ood.get("flag"):
+        names = ", ".join(f"{f['name']} (z={f['z']})"
+                          for f in ood.get("features", [])[:3])
+        reasons.append({
+            "code": "out_of_distribution",
+            "rule": f"classifier input outside the training range: {names}",
+        })
+
     p_det = _fnum(det.get("period_days"))
     p_cat = _fnum((gt or {}).get("catalog_period_days"))
     d_pct = _period_delta_pct(p_det, p_cat)
@@ -360,7 +369,12 @@ def verify_records(records: list[dict],
         row = sum(matrix[j])
         prec = tp / row if row else None
         rec = tp / col if col else None
-        f1 = (2 * prec * rec / (prec + rec)) if prec and rec else None
+        # F1 = 2·TP / (predicted + true). A class that occurs (as truth or
+        # prediction) but is never hit scores 0 — it must not silently drop
+        # out of the macro average (that inflated macro-F1, e.g. 0.79 vs an
+        # honest 0.47 when every EB truth was missed). Only classes absent
+        # from both rows and columns are undefined (sklearn convention).
+        f1 = (2 * tp / (row + col)) if (row + col) else None
         per_class.append({"class": name, "support": col,
                           "precision": round(prec, 3) if prec is not None else None,
                           "recall": round(rec, 3) if rec is not None else None,

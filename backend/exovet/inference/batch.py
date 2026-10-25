@@ -32,6 +32,17 @@ MAX_BATCH = 2000
 DOWNLOAD_RETRY_DELAYS = (8.0, 20.0)   # MAST throttles bursts; back off and retry
 
 
+def _analysis_key(tic_id: int, include_fit: bool) -> str | None:
+    """Cache key (code schema + config + model checkpoint + data stamp) that
+    a record was produced under; resume only reuses records whose key still
+    matches, so a retrained model never inherits old predictions."""
+    try:
+        from exovet.inference.analysis_cache import analysis_cache_key
+        return analysis_cache_key(tic_id, "full" if include_fit else "quick")
+    except Exception:                                 # noqa: BLE001
+        return None
+
+
 def _one_target(tic_id: int, include_fit: bool, gt: dict[int, dict]) -> dict:
     t0 = time.time()
     rec: dict = {"target_id": tic_id}
@@ -75,6 +86,7 @@ def _one_target(tic_id: int, include_fit: bool, gt: dict[int, dict]) -> dict:
         "run_mode": report.get("run_mode", "full"),
         "n_attempts": attempts,
         "seconds": round(time.time() - t0, 1),
+        "analysis_key": _analysis_key(tic_id, include_fit),
     })
     g = gt.get(tic_id)
     if g:
@@ -129,14 +141,27 @@ def run_batch(tic_ids: list[int], result_path: Path,
     for extra in resume_from or []:
         if Path(extra).exists() and Path(extra) != result_path:
             sources.append(Path(extra))
+    stale = 0
     for src in sources:
         try:
             prev = read_json(src)
             for r in prev.get("records", []):
-                if r.get("status") == "ok":
-                    done.setdefault(int(r["target_id"]), r)
+                if r.get("status") != "ok":
+                    continue
+                tid = int(r["target_id"])
+                if tid in done or tid not in tic_ids:
+                    continue
+                # reuse only results produced under today's code/config/model
+                # /data; records without a key predate this check -> re-run
+                key = r.get("analysis_key")
+                if key is None or key != _analysis_key(tid, include_fit):
+                    stale += 1
+                    continue
+                done[tid] = r
         except Exception:                             # noqa: BLE001
             pass
+    if stale:
+        doc["config"]["resume_skipped_stale"] = stale
     doc["records"] = [done[t] for t in tic_ids if t in done]
     if len(doc["records"]):
         doc["config"]["resumed"] = len(doc["records"])

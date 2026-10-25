@@ -77,7 +77,21 @@ export interface McClassification {
   predictive_entropy: number;
   mutual_information: number;
   n_passes: number;
-  flags: { ambiguous: boolean; unstable: boolean; verdict: string };
+  flags: { ambiguous: boolean; unstable: boolean; verdict: string; out_of_distribution?: boolean };
+  ood?: {
+    checked: boolean;
+    flag: boolean;
+    features: { name: string; value: number; z: number; train_min: number; train_max: number }[];
+    rule?: string;
+  };
+  excluded_inputs?: string[];
+  ensemble?: {
+    applied?: boolean;
+    weight_transformer?: number;
+    val_macro_f1_blend?: number;
+    created_at?: string;
+    note?: string;
+  };
   model_checkpoint?: {
     trained_at?: string;
     test_macro_f1?: number | null;
@@ -189,8 +203,19 @@ export interface Report {
   transit_fit?: TransitFit;
   series?: SeriesSection;
   stellar?: Record<string, unknown>;
+  feature_registry?: {
+    features?: Record<string, FeatureDef>;
+    scalar_order?: string[];
+  };
   total_seconds?: number;
   error?: string;
+}
+
+export interface FeatureDef {
+  definition?: string;
+  unit?: string;
+  source?: string;
+  reason?: string;
 }
 
 export interface Versions {

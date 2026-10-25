@@ -11,6 +11,8 @@
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 
 from exovet.config import settings
@@ -27,14 +29,26 @@ def normalize_views(v: np.ndarray) -> np.ndarray:
                    -10.0, 10.0).astype(np.float32)
 
 
-def fit_scaler(x: np.ndarray) -> dict:
-    """Median-imputation + standardisation statistics from a train matrix."""
+def fit_scaler(x: np.ndarray, names: list[str] | None = None) -> dict:
+    """Median-imputation + standardisation statistics from a train matrix.
+
+    Also records which columns are masked out of the classifier
+    (settings.CLASSIFIER_EXCLUDED_SCALARS) and the observed training range of
+    every column, which the out-of-distribution check compares against.
+    """
     med = np.nanmedian(x, axis=0)
     filled = np.where(np.isfinite(x), x, med[None, :])
     mean = filled.mean(axis=0)
     std = filled.std(axis=0)
     std = np.where(std < 1e-8, 1.0, std)
-    return {"median": med.tolist(), "mean": mean.tolist(), "std": std.tolist()}
+    excluded = ([i for i, n in enumerate(names)
+                 if n in settings.CLASSIFIER_EXCLUDED_SCALARS]
+                if names is not None else [])
+    return {"median": med.tolist(), "mean": mean.tolist(), "std": std.tolist(),
+            "excluded": excluded,
+            "excluded_names": [names[i] for i in excluded] if names else [],
+            "train_min": np.nanmin(x, axis=0).tolist(),
+            "train_max": np.nanmax(x, axis=0).tolist()}
 
 
 def transform_scalars(x: np.ndarray, scaler: dict) -> np.ndarray:
@@ -42,7 +56,41 @@ def transform_scalars(x: np.ndarray, scaler: dict) -> np.ndarray:
     mean = np.asarray(scaler["mean"], dtype=np.float32)
     std = np.asarray(scaler["std"], dtype=np.float32)
     filled = np.where(np.isfinite(x), x, med[None, :])
-    return ((filled - mean) / std).astype(np.float32)
+    z = ((filled - mean) / std).astype(np.float32)
+    excl = scaler.get("excluded") or []
+    if excl:
+        z[:, excl] = 0.0          # masked: the classifier sees the train mean
+    return z
+
+
+def out_of_distribution(vec: np.ndarray, scaler: dict,
+                        names: list[str]) -> dict:
+    """Classifier inputs outside the training range and > OOD_MIN_Z sigma.
+
+    Masked columns are skipped (the model cannot see them); NaNs are skipped
+    (they are imputed with the training median). Old scalers without a
+    recorded range report ``checked: False`` rather than a false all-clear.
+    """
+    if "train_min" not in scaler:
+        return {"checked": False, "flag": False, "features": []}
+    lo = np.asarray(scaler["train_min"], dtype=np.float64)
+    hi = np.asarray(scaler["train_max"], dtype=np.float64)
+    mean = np.asarray(scaler["mean"], dtype=np.float64)
+    std = np.asarray(scaler["std"], dtype=np.float64)
+    excl = set(scaler.get("excluded") or [])
+    out = []
+    for i, v in enumerate(np.asarray(vec, dtype=np.float64)):
+        if i in excl or not np.isfinite(v):
+            continue
+        z = (v - mean[i]) / std[i]
+        if (v < lo[i] or v > hi[i]) and abs(z) > settings.OOD_MIN_Z:
+            out.append({"name": names[i], "value": float(v), "z": round(float(z), 2),
+                        "train_min": float(lo[i]), "train_max": float(hi[i])})
+    out.sort(key=lambda d: -abs(d["z"]))
+    return {"checked": True, "flag": bool(out), "features": out,
+            "rule": (f"value outside the training range and |z| > "
+                     f"{settings.OOD_MIN_Z:g}; masked inputs "
+                     f"{scaler.get('excluded_names') or []} not checked")}
 
 
 def class_weights(y: np.ndarray, n_classes: int) -> np.ndarray:
@@ -55,10 +103,19 @@ def class_weights(y: np.ndarray, n_classes: int) -> np.ndarray:
 def prepare(dataset_dir=None, seed: int = S.SPLIT_SEED) -> dict:
     """Load samples, make splits, fit scalers → ready-to-train dict."""
     data = S.load_samples(dataset_dir)
-    splits = S.make_splits(data["label"], data["target_id"], seed=seed)
+    frozen = settings.MODEL_DIR / "split_targets.json"
+    if frozen.exists():
+        # the split is stratified by label, and the EB/grazing-EB label is
+        # derived from a feature (v_shape); re-deriving the split after a
+        # feature repair would silently reshuffle the test set. Reuse the
+        # recorded target assignment instead so test stays identical.
+        splits = S.splits_from_targets(data["label"], data["target_id"],
+                                       json.loads(frozen.read_text()))
+    else:
+        splits = S.make_splits(data["label"], data["target_id"], seed=seed)
 
     train_idx = splits["train"]
-    scaler = fit_scaler(data["scalars"][train_idx])
+    scaler = fit_scaler(data["scalars"][train_idx], list(data["feature_names"]))
 
     out = {
         "data": data,

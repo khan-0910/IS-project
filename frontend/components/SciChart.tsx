@@ -59,6 +59,21 @@ function useWidth() {
 
 const LOG = (v: number) => Math.log10(Math.max(v, 1e-12));
 
+/** Break a series wherever the x-step exceeds 10x the median step. */
+function splitAtGaps(pts: Pt[]): Pt[][] {
+  if (pts.length < 3) return [pts];
+  const dx: number[] = [];
+  for (let i = 1; i < pts.length; i++) dx.push(pts[i][0] - pts[i - 1][0]);
+  const med = [...dx].sort((a, b) => a - b)[Math.floor(dx.length / 2)];
+  if (!(med > 0)) return [pts];
+  const out: Pt[][] = [[pts[0]]];
+  for (let i = 1; i < pts.length; i++) {
+    if (dx[i - 1] > 10 * med) out.push([]);
+    out[out.length - 1].push(pts[i]);
+  }
+  return out;
+}
+
 function niceTicks(a: number, b: number, n = 5): number[] {
   const span = b - a;
   if (span <= 0 || !isFinite(span)) return [a];
@@ -155,21 +170,7 @@ export default function SciChart({
   if (!xs.length || !ys.length) {
     return (
       <div ref={ref} style={{ height }}>
-        <div
-          style={{
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "1px solid var(--line)",
-            fontFamily: "var(--font-mono)",
-            fontSize: 10,
-            letterSpacing: "0.2em",
-            color: "var(--faint)",
-          }}
-        >
-          {emptyText}
-        </div>
+        <div className="chart-empty">{emptyText}</div>
       </div>
     );
   }
@@ -259,6 +260,7 @@ export default function SciChart({
             y={padT}
             width={iw}
             height={ih}
+            rx={6}
             fill="none"
             stroke="var(--line-strong)"
             strokeWidth={1}
@@ -308,25 +310,33 @@ export default function SciChart({
                 </g>
               );
             }
-            const d = s.points
-              .map(
-                ([x, y], j) =>
-                  `${j === 0 ? "M" : "L"}${X(x).toFixed(2)},${Y(y).toFixed(2)}`
+            // split the line at data gaps (sector boundaries, downlinks) so
+            // no straight segment is drawn through time with no observations
+            // (log-x periodograms have a non-uniform grid by design: never split)
+            const segs = logX ? [s.points] : splitAtGaps(s.points);
+            const d = segs
+              .map((seg) =>
+                seg
+                  .map(([x, y], j) => `${j === 0 ? "M" : "L"}${X(x).toFixed(2)},${Y(y).toFixed(2)}`)
+                  .join("")
               )
               .join("");
+            const floor = (padT + ih).toFixed(2);
             return (
-              <g>
-                {s.fill && s.points.length > 1 && (
-                  <path
-                    d={`${d}L${X(s.points[s.points.length - 1][0]).toFixed(2)},${(
-                      padT + ih
-                    ).toFixed(2)}L${X(s.points[0][0]).toFixed(2)},${(
-                      padT + ih
-                    ).toFixed(2)}Z`}
-                    fill={s.fill}
-                    stroke="none"
-                  />
-                )}
+              <g key={i}>
+                {s.fill &&
+                  segs.map((seg, k) =>
+                    seg.length > 1 ? (
+                      <path
+                        key={k}
+                        d={`${seg
+                          .map(([x, y], j) => `${j === 0 ? "M" : "L"}${X(x).toFixed(2)},${Y(y).toFixed(2)}`)
+                          .join("")}L${X(seg[seg.length - 1][0]).toFixed(2)},${floor}L${X(seg[0][0]).toFixed(2)},${floor}Z`}
+                        fill={s.fill}
+                        stroke="none"
+                      />
+                    ) : null
+                  )}
                 <path
                   key={i}
                   d={d}

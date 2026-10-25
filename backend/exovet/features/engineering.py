@@ -195,46 +195,75 @@ def v_shape_metric(t: np.ndarray, y: np.ndarray, period: float, t0: float,
     Width of the folded dip at 20% depth divided by width at 80% depth:
     a box gives ~1 (equal widths), a triangle gives ~4 (much wider near the
     top of the dip); the result is linearly mapped and clipped to [0, 1].
-    Computed from binned phase-folded data only.
+
+    The widths come from a trapezoid (base, depth, centre, total width T14,
+    flat-bottom fraction r) least-squares fitted to the binned fold, so every
+    in-transit bin constrains the shape.  The earlier version read the depth
+    off the single lowest bin; on shallow noisy transits that bin is a noise
+    spike, the 80%-depth width collapses to one bin and the metric saturated
+    at 1.0 ("triangular") for most planets.  For a trapezoid the width at
+    fraction f of the depth is T14·(1 − f·(1 − r)), giving w20/w80 directly.
+
+    Returns NaN (imputed downstream) when the fitted depth is not at least
+    3× the bin noise — the shape is then not measurable, not "V-shaped".
     """
+    from scipy.optimize import least_squares
+
     try:
         ph = fold_phase(t, period, t0)
-        half = 1.5 * duration
+        half = 2.0 * duration
         sel = np.abs(ph) <= half
         if sel.sum() < 50:
             return float("nan")
         p, f = ph[sel], y[sel]
-        nb = 60
+        nb = 80
         edges = np.linspace(-half, half, nb + 1)
+        centers = 0.5 * (edges[:-1] + edges[1:])
         idx = np.clip(np.digitize(p, edges) - 1, 0, nb - 1)
         bins = np.full(nb, np.nan)
         for b in range(nb):
             m = idx == b
             if m.sum() >= 3:
                 bins[b] = np.median(f[m])
-        if np.isfinite(bins).sum() < 20:
+        ok = np.isfinite(bins)
+        if ok.sum() < 20:
             return float("nan")
-        base = np.nanpercentile(bins, 90)
-        depth = base - np.nanmin(bins)
-        if not np.isfinite(depth) or depth <= 0:
+        x, yb = centers[ok], bins[ok]
+
+        def trap(q):
+            base, depth, tc, t14, r = q
+            d = np.abs(x - tc)
+            flat = 0.5 * t14 * r
+            edge = 0.5 * t14
+            frac = np.clip((edge - d) / max(edge - flat, 1e-9), 0.0, 1.0)
+            return base - depth * frac
+
+        base0 = float(np.nanpercentile(yb, 90))
+        depth0 = max(base0 - float(np.min(np.convolve(
+            yb, np.ones(3) / 3, mode="valid"))), 1e-6)
+        lo = [base0 - 0.5 * depth0 - 1e-3, 0.0, -0.5 * duration,
+              0.2 * duration, 0.0]
+        hi = [base0 + 0.5 * depth0 + 1e-3, 10 * depth0 + 1e-3,
+              0.5 * duration, 2.0 * half, 1.0]
+        best = None
+        for r0 in (0.1, 0.5, 0.9):
+            q0 = np.clip([base0, depth0, 0.0, duration, r0], lo, hi)
+            sol = least_squares(lambda q: trap(q) - yb, q0,
+                                bounds=(lo, hi), loss="soft_l1",
+                                f_scale=max(0.2 * depth0, 1e-6))
+            if best is None or sol.cost < best.cost:
+                best = sol
+        base, depth, _, t14, r = best.x
+        resid = yb - trap(best.x)
+        sig = float(np.median(np.abs(resid - np.median(resid))) * 1.4826)
+        if not np.isfinite(depth) or depth <= 0 or depth < 3.0 * sig:
             return float("nan")
-        deficit = base - bins                       # per bin
-        w80 = _width_above(deficit, 0.8 * depth, edges)
-        w20 = _width_above(deficit, 0.2 * depth, edges)
-        if w80 <= 0 or not np.isfinite(w20):
-            return float("nan")
-        ratio = w20 / w80                           # ~1 box, ~4 triangle
+        w20 = 1.0 - 0.2 * (1.0 - r)
+        w80 = 1.0 - 0.8 * (1.0 - r)
+        ratio = w20 / w80                           # 1 box … 4 triangle
         return float(np.clip((ratio - 1.0) / 3.0, 0.0, 1.0))
     except Exception:
         return float("nan")
-
-
-def _width_above(deficit: np.ndarray, level: float,
-                 edges: np.ndarray) -> float:
-    above = np.nan_to_num(deficit, nan=-1.0) >= level
-    if not above.any():
-        return 0.0
-    return float(np.sum(above) * (edges[1] - edges[0]))
 
 
 def secondary_depth_ratio(t: np.ndarray, y: np.ndarray, period: float,

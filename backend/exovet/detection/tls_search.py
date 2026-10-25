@@ -22,12 +22,17 @@ level (``1 - depth``).  Older 1.0.x names are also handled.
 
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass, field
 
 import numpy as np
 
 from exovet.config import settings
 from exovet.utils.errors import TLSFailureError
+
+# one gate for the whole process: TLS parallelizes internally across cores,
+# so concurrent searches only multiply memory (see TLS_MAX_CONCURRENT)
+_TLS_GATE = threading.BoundedSemaphore(max(1, int(settings.TLS_MAX_CONCURRENT)))
 
 
 @dataclass
@@ -178,10 +183,13 @@ def _duration_from_fold(time: np.ndarray, flux: np.ndarray, period: float,
     """T14 at half depth measured from the folded, time-uniform curve.
 
     The TLS duration grid assumes solar density and can run systematically
-    short; here the total time below half depth near phase 0 (primary side
-    only, so a deep secondary eclipse does not inflate it) is converted to a
-    duration via the uniform-in-time sampling fraction.  Returns None when
-    the measurement is not credible.
+    short; here the primary-side fold (|phase| ≤ P/4, so a deep secondary
+    eclipse does not inflate it) is binned, and the contiguous run of bins
+    below half depth around the dip minimum is measured.  Binning first is
+    what keeps shallow transits honest: counting individual samples below
+    half depth lets ordinary noise points anywhere in the hemisphere add to
+    the "duration" (a 300 ppm transit in 145 ppm scatter read as 12.8 h
+    instead of ~3 h).  Returns None when the measurement is not credible.
     """
     if not (period and t0 and depth and period > 0 and depth > 1e-4):
         return None
@@ -195,9 +203,42 @@ def _duration_from_fold(time: np.ndarray, flux: np.ndarray, period: float,
     hemi = np.abs(ph) <= (0.25 * period)
     if int(hemi.sum()) < 20:
         return None
-    below = (y <= (1.0 - 0.5 * depth)) & hemi
-    dur = float(below.sum()) / float(hemi.sum()) * (0.5 * period)
-    if dur <= 0 or dur > 0.3 * period or int(below.sum()) < 5:
+    ph, y = ph[hemi], y[hemi]
+
+    n_bins = 1000
+    edges = np.linspace(-0.25 * period, 0.25 * period, n_bins + 1)
+    bw = float(edges[1] - edges[0])
+    idx = np.clip(np.digitize(ph, edges) - 1, 0, n_bins - 1)
+    counts = np.bincount(idx, minlength=n_bins)
+    sums = np.bincount(idx, weights=y, minlength=n_bins)
+    binned = np.full(n_bins, np.nan)
+    filled = counts > 0
+    if int(filled.sum()) < 20:
+        return None
+    binned[filled] = sums[filled] / counts[filled]
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    binned = np.interp(centers, centers[filled], binned[filled])
+
+    level = 1.0 - 0.5 * depth
+    # bin noise from the outer half of the hemisphere (out of transit for
+    # any credible duration); the half-depth line must clear it
+    outer = np.abs(centers) > 0.125 * period
+    sig_bin = float(np.median(np.abs(binned[outer] - np.median(binned[outer])))
+                    * 1.4826) if outer.any() else 0.0
+    if not np.isfinite(sig_bin) or 0.5 * depth < 3.0 * sig_bin:
+        return None
+
+    near = np.abs(centers) <= 0.1 * period
+    i0 = int(np.flatnonzero(near)[np.argmin(binned[near])])
+    if binned[i0] > level:
+        return None
+    lo = hi = i0
+    while lo > 0 and binned[lo - 1] <= level:
+        lo -= 1
+    while hi < n_bins - 1 and binned[hi + 1] <= level:
+        hi += 1
+    dur = float(hi - lo + 1) * bw
+    if dur <= 0 or dur > 0.3 * period or int(counts[lo:hi + 1].sum()) < 5:
         return None
     return dur
 
@@ -256,15 +297,20 @@ def event_realization(time: np.ndarray, flux: np.ndarray, period: float,
                       t0: float, duration: float, depth: float) -> float | None:
     """Fraction of predicted transit epochs with an observed dip.
 
-    For every epoch t0 + m·period covered by the data, an event "realizes"
-    when at least one sample within ±0.5·duration lies below half the depth.
-    The dip level is floored at 4× the robust point-to-point scatter so that
-    a heavily diluted candidate depth (e.g. at a sub-multiple of the true
-    period, where the folded median sits at the out-of-transit level) cannot
-    push the threshold inside the noise band and mark every epoch "dipped".
-    At a too-short alias P_true/N only ~1/N of the predicted epochs show a
-    dip; at the true period essentially all do (data gaps lower it, which the
-    decision threshold accounts for).
+    For every epoch t0 + m·period that the data actually cover (at least
+    half of the expected samples inside the central ±0.25·duration), the
+    event "realizes" when the MEAN flux of those samples sits at least half
+    the depth below 1.  The dip level is floored at 3× the noise of that
+    mean (robust scatter / √n), so a heavily diluted candidate depth (e.g. at
+    a sub-multiple of the true period) cannot push the threshold inside the
+    noise band and mark every epoch "dipped".  At a too-short alias P_true/N
+    only ~1/N of the covered epochs dip; at the true period essentially all
+    do.  Epochs falling in data gaps are not counted as missed.
+
+    Returns None when the test is not informative: no covered epoch, or
+    single events too shallow for their own noise (median per-event noise
+    floor above the full depth) — shallow planets detected only by stacking
+    many transits must not be labelled "period suspect" for that reason.
     """
     if (period is None or t0 is None or duration is None or depth is None
             or period <= 0 or duration <= 0 or depth <= 0):
@@ -278,21 +324,33 @@ def event_realization(time: np.ndarray, flux: np.ndarray, period: float,
     order = np.argsort(t)
     t, y = t[order], y[order]
     sigma = float(np.median(np.abs(y - np.median(y))) * 1.4826)
-    floor = 4.0 * sigma if (np.isfinite(sigma) and sigma > 0) else 0.0
-    dip_lvl = 1.0 - max(0.5 * depth, floor)
+    if not (np.isfinite(sigma) and sigma > 0):
+        sigma = 0.0
+    cadence = float(np.median(np.diff(t))) if t.size > 1 else 0.0
+    half_w = 0.25 * duration
+    n_expect = (2.0 * half_w / cadence) if cadence > 0 else 0.0
+    n_min = max(3, int(0.5 * n_expect))
     m0 = int(np.ceil((t.min() - t0 - duration) / period))
     m1 = int(np.floor((t.max() - t0 + duration) / period))
     if m1 < m0:
         return None
     predicted = realized = 0
+    floors: list[float] = []
     for m in range(m0, m1 + 1):
         e = t0 + m * period
-        lo = np.searchsorted(t, e - 0.5 * duration)
-        hi = np.searchsorted(t, e + 0.5 * duration)
+        lo = np.searchsorted(t, e - half_w)
+        hi = np.searchsorted(t, e + half_w)
+        n = hi - lo
+        if n < n_min:
+            continue                    # epoch in a data gap: not a miss
+        floor = 3.0 * sigma / np.sqrt(n)
+        floors.append(floor)
         predicted += 1
-        if hi > lo and bool((y[lo:hi] <= dip_lvl).any()):
+        if 1.0 - float(np.mean(y[lo:hi])) >= max(0.5 * depth, floor):
             realized += 1
-    return float(realized) / predicted if predicted else None
+    if not predicted or float(np.median(floors)) > depth:
+        return None
+    return float(realized) / predicted
 
 
 def harmonic_scan(time: np.ndarray, flux: np.ndarray, period: float,
@@ -336,8 +394,13 @@ def harmonic_scan(time: np.ndarray, flux: np.ndarray, period: float,
     diag["realization_at_tls_period"] = _f(real0)
     pow0 = _peak_power_near(pg_p, pg_pow, period)
     diag["power_at_tls_period"] = pow0
-    if real0 is None or pow0 is None or pow0 <= 0:
-        diag["reason"] = "fold or periodogram power unavailable"
+    if real0 is None:
+        diag["reason"] = ("event realization not measurable: single transits "
+                          "are too shallow for their own noise (or fall in "
+                          "data gaps), so the alias test is not informative")
+        return None, diag
+    if pow0 is None or pow0 <= 0:
+        diag["reason"] = "periodogram power unavailable"
         return None, diag
 
     best = None  # (n, period_c, realization_c, depth_c)
@@ -527,9 +590,10 @@ def run_tls(time: np.ndarray, flux: np.ndarray,
         )
 
     try:
-        model = tls_cls(t, y, verbose=False)
-        res, gate_used = _power_with_gate_retry(
-            model, settings.TLS_TRANSIT_DEPTH_MIN, warnings, n_threads)
+        with _TLS_GATE:
+            model = tls_cls(t, y, verbose=False)
+            res, gate_used = _power_with_gate_retry(
+                model, settings.TLS_TRANSIT_DEPTH_MIN, warnings, n_threads)
     except Exception as exc:
         raise TLSFailureError(
             "The TLS transit search failed on this light curve. The data may "

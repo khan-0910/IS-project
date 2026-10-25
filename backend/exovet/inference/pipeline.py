@@ -42,7 +42,7 @@ _PIPELINE_CONFIG_KEYS = (
     "MC_DROPOUT_PASSES", "MCMC_STEPS", "MCMC_WALKERS",
     "MCMC_MAX_POINTS", "HARMONIC_CHECK_ENABLED", "HARMONIC_MAX_MULTIPLE",
     "HARMONIC_MIN_POWER_RATIO", "HARMONIC_MIN_CONC_GAIN",
-    "HARMONIC_MIN_TRANSITS",
+    "HARMONIC_MIN_TRANSITS", "CLASSIFIER_EXCLUDED_SCALARS", "OOD_MIN_Z",
 )
 
 
@@ -65,8 +65,14 @@ def versions_block(mode: str) -> dict:
             payload = torch.load(ckpt, map_location="cpu", weights_only=False)
             trained_at = payload.get("trained_at")
             f1 = (payload.get("metrics") or {}).get("test", {}).get("macro_f1")
+            # include the checkpoint file mtime: identical trained_at + test
+            # score can still differ in frozen serving metadata (e.g. an
+            # injected ensemble block), and a cache key that missed that was
+            # serving stale reports — the docstring says mtime, so keep it
+            mtime = str(ckpt.stat().st_mtime_ns)
             model_version = (f"{ckpt.stem}-" + str(trained_at or "")[:10]
-                             + (f"-f1{f1:.3f}" if f1 is not None else ""))
+                             + (f"-f1{f1:.3f}" if f1 is not None else "")
+                             + f"-m{mtime[-10:]}")
         except Exception:                         # noqa: BLE001
             model_version = ckpt.stem
     gt_csv = settings.DATASET_DIR / "targets_labeled.csv"
@@ -189,6 +195,10 @@ def analyze_lightcurve(bundle, stellar: dict | None = None,
                     for n in payload["feature_names"]], dtype=np.float32)
     mc = mc_predict(model, views["global"], views["local"], views["phase"],
                     vec, scaler=payload["scaler"])
+    ens_block = payload.get("ensemble")
+    if ens_block and ens_block.get("type") == "logreg_blend":
+        from exovet.training.ensemble import apply_ensemble
+        mc = apply_ensemble(mc, ens_block, vec, payload["scaler"])
     tr.end("classification")
     tr.end("uncertainty")   # MC passes are inside the same measured block
     mc["seconds"] = round(time.time() - t0, 2)  # combined classify+MC timing
@@ -197,6 +207,13 @@ def analyze_lightcurve(bundle, stellar: dict | None = None,
         "test_macro_f1": payload["metrics"].get("test_macro_f1"),
         "dataset": payload.get("dataset"),
     }
+    # out-of-distribution: an input the model never saw anything like makes
+    # the probabilities an extrapolation, whatever the MC verdict says
+    from exovet.training.prepare import out_of_distribution
+    mc["ood"] = out_of_distribution(vec, payload["scaler"],
+                                    list(payload["feature_names"]))
+    mc["flags"]["out_of_distribution"] = mc["ood"]["flag"]
+    mc["excluded_inputs"] = payload["scaler"].get("excluded_names") or []
     report["classification"] = mc
 
     # 7. attention

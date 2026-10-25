@@ -14,15 +14,25 @@ $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 $env:MPLBACKEND = "Agg"
 
-if (-not (Test-Path ".venv\Scripts\python.exe")) {
-    Write-Host "No .venv found - run scripts\win_setup.ps1 first." -ForegroundColor Red
+# Pick an interpreter that is allowed to run. Windows Application Control
+# (Smart App Control) can block the copied .venv launcher; the vendored
+# interpreter has the same packages installed and is used as a fallback.
+$py = $null
+foreach ($cand in @(".venv\Scripts\python.exe", "vendor\py313\python.exe")) {
+    if (Test-Path $cand) {
+        try { & $cand -c "import exovet" 2>$null; if ($LASTEXITCODE -eq 0) { $py = (Resolve-Path $cand).Path; break } } catch { }
+    }
+}
+if (-not $py) {
+    Write-Host "No working Python with exovet installed - run scripts\win_setup.ps1 first." -ForegroundColor Red
     exit 1
 }
+Write-Host "Python: $py"
 
 function Start-Backend {
     Write-Host "== backend  -> http://localhost:8000  (API docs: /docs) ==" -ForegroundColor Cyan
     Push-Location backend
-    ..\.venv\Scripts\python.exe -m uvicorn exovet.api.app:app --host 0.0.0.0 --port 8000
+    & $py -m uvicorn exovet.api.app:app --host 0.0.0.0 --port 8000
     Pop-Location
 }
 
@@ -44,7 +54,7 @@ switch ($Mode) {
         Write-Host "Starting backend and frontend in separate windows..." -ForegroundColor Cyan
         Write-Host ("Logs: {0}\{1}" -f $env:TEMP, "exovet_backend.log")
         Start-Process powershell -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass",
-            "-Command", "Set-Location backend; ..\.venv\Scripts\python.exe -m uvicorn exovet.api.app:app --host 0.0.0.0 --port 8000 *> '$env:TEMP\exovet_backend.log'") | Out-Null
+            "-Command", "Set-Location backend; & '$py' -m uvicorn exovet.api.app:app --host 0.0.0.0 --port 8000 *> '$env:TEMP\exovet_backend.log'") | Out-Null
         Start-Process powershell -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass",
             "-Command", "Set-Location frontend; if (-not (Test-Path node_modules)) { npm install }; npm run dev *> '$env:TEMP\exovet_frontend.log'") | Out-Null
         Write-Host ""

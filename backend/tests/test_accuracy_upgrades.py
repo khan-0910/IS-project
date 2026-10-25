@@ -86,9 +86,11 @@ def test_harmonic_scan_recovers_true_period_from_alias():
     assert N_ALIAS in checked
     assert checked[N_ALIAS]["power_ratio"] == pytest.approx(0.85, abs=0.01)
     # a checked sub-multiple (if it survives the fold-depth gate) must fail
-    # the realization requirement
+    # the realization requirement (None = its folded depth is too diluted
+    # for single events to be tested, which also rejects it)
     if 2 in checked:
-        assert checked[2]["realization"] < 0.8
+        r2 = checked[2]["realization"]
+        assert r2 is None or r2 < 0.8
     # the recovered depth is the real eclipse depth, not the alias's smear
     assert diag["depth_at_new_period_ppm"] == pytest.approx(DEPTH * 1e6, rel=0.25)
 
@@ -196,6 +198,49 @@ def test_duration_from_fold_measures_box_width():
     assert dur == pytest.approx(DUR, abs=0.01)
 
 
+def _shallow_planet_curve(seed=3):
+    """Pi-Mensae-like regime: 305 ppm, ~2.9 h transit in 145 ppm scatter at
+    2-min cadence over three sectors, each with a mid-sector downlink gap."""
+    rng = np.random.default_rng(seed)
+    p, t0, dur, depth = 6.2678, 1.1, 0.12, 3.05e-4
+    cad = 2 / 60 / 24
+    t = np.concatenate([np.arange(s, s + 27.0, cad) for s in (0.0, 28.0, 56.0)])
+    gap = np.zeros(t.size, dtype=bool)
+    for s in (0.0, 28.0, 56.0):
+        gap |= (t > s + 12.5) & (t < s + 14.5)
+    t = t[~gap]
+    ph = ((t - t0 + 0.5 * p) % p) - 0.5 * p
+    y = np.where(np.abs(ph) <= dur / 2, 1.0 - depth, 1.0)
+    return t, y + rng.normal(0, 1.45e-4, t.size), p, t0, dur, depth
+
+
+def test_event_realization_accepts_shallow_real_planet_with_gaps():
+    """A shallow, real transit train must realize ~all covered epochs
+    (the old per-point 4-sigma floor sat deeper than the transit, giving
+    ~30% and a false 'period suspect')."""
+    t, y, p, t0, dur, depth = _shallow_planet_curve()
+    real = tl.event_realization(t, y, p, t0, dur, depth)
+    assert real is not None and real >= 0.8
+    # the alias defence still holds in the same noise regime: at P/3 only
+    # ~1/3 of covered epochs dip at the (diluted) folded depth
+    real_alias = tl.event_realization(t, y, p / 3, t0, dur, depth / 3)
+    assert real_alias is not None and real_alias < 0.5
+
+
+def test_event_realization_uninformative_when_single_events_drown():
+    """Single events far below their own noise -> None, not 'suspect'."""
+    rng = np.random.default_rng(1)
+    t = np.arange(0.0, 27.0, 2 / 60 / 24)
+    y = 1.0 + rng.normal(0, 2e-3, t.size)
+    assert tl.event_realization(t, y, 3.0, 0.5, 0.08, 2e-4) is None
+
+
+def test_duration_from_fold_not_inflated_by_noise_for_shallow_transit():
+    t, y, p, t0, dur, depth = _shallow_planet_curve()
+    d = tl._duration_from_fold(t, y, p, t0, depth)
+    assert d is not None and d == pytest.approx(dur, abs=0.03)
+
+
 def test_duration_from_fold_rejects_impossibly_wide_dips():
     # dip wider than 0.3 x period cannot be a transit -> None
     t = np.arange(0, 10, 2 / 60 / 24)
@@ -298,3 +343,26 @@ def test_fit_transit_normalizes_drifting_baseline_and_decimates(monkeypatch):
     rp = res["params"]["rp_over_rs"]["median"]
     assert abs(rp - 0.08) < 0.012
     assert res["fit_quality"]["reduced_chi2"] < 5.0
+
+
+# ---------------------------------------------------------------------------
+# verify_records — macro-F1 must not drop classes that were entirely missed
+# ---------------------------------------------------------------------------
+
+def test_verify_macro_f1_counts_missed_class_as_zero():
+    from exovet.eval.verify import verify_records
+    gt = {1: {"label_name": "planet_candidate"}, 2: {"label_name": "planet_candidate"},
+          3: {"label_name": "eclipsing_binary"}, 4: {"label_name": "eclipsing_binary"}}
+    recs = [
+        {"target_id": 1, "status": "ok", "predicted_class": "planet_candidate"},
+        {"target_id": 2, "status": "ok", "predicted_class": "planet_candidate"},
+        # every EB truth predicted as a planet -> EB F1 = 0, PC F1 = 2*2/(4+2)
+        {"target_id": 3, "status": "ok", "predicted_class": "planet_candidate"},
+        {"target_id": 4, "status": "ok", "predicted_class": "planet_candidate"},
+    ]
+    out = verify_records(recs, catalog=gt)
+    per = {p["class"]: p for p in out["per_class"]}
+    assert per["eclipsing_binary"]["f1"] == 0.0
+    assert per["planet_candidate"]["f1"] == pytest.approx(0.667, abs=1e-3)
+    assert per["contamination_blend"]["f1"] is None      # absent everywhere
+    assert out["metrics"]["macro_f1"] == pytest.approx((0.667 + 0.0) / 2, abs=1e-3)
