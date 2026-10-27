@@ -1,7 +1,7 @@
-# EXOVET — one-time native-Windows setup (PowerShell).
+# EXOVET - one-time native-Windows setup (PowerShell).
 # Run from the repo root:
 #   powershell -ExecutionPolicy Bypass -File scripts\win_setup.ps1
-# Mirrors scripts/mac_setup.sh. Requires 64-bit CPython 3.11–3.13 and Node.js 18+.
+# Mirrors scripts/mac_setup.sh. Requires 64-bit CPython 3.11-3.13 and Node.js 18+.
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot      # repo root
@@ -37,12 +37,12 @@ else {
 }
 
 # --- 3. Backend dependencies ---------------------------------------------------
-Say "Installing backend dependencies (torch comes from the CPU wheel index — a few minutes on first run)"
+Say "Installing backend dependencies (torch comes from the CPU wheel index - a few minutes on first run)"
 .\.venv\Scripts\python.exe -m pip install torch --index-url https://download.pytorch.org/whl/cpu
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
 # --- 4. Backend as editable package -------------------------------------------
-Say "Installing exovet backend (editable) — re-run this step if you ever move the folder"
+Say "Installing exovet backend (editable) - re-run this step if you ever move the folder"
 .\.venv\Scripts\python.exe -m pip install -e .\backend
 
 # --- 5. Smoke tests ------------------------------------------------------------
@@ -54,9 +54,9 @@ if ($LASTEXITCODE -ne 0) { throw "pytest failed (exit $LASTEXITCODE)" }
 # --- 6. Frontend ----------------------------------------------------------------
 $node = Get-Command node -ErrorAction SilentlyContinue
 if (-not $node) {
-    Warn "Node.js not found — install the LTS build from https://nodejs.org then run:  cd frontend; npm install"
+    Warn "Node.js not found - install the LTS build from https://nodejs.org then run:  cd frontend; npm install"
 } else {
-    Say "Node $((node --version)) — installing frontend dependencies"
+    Say "Node $((node --version)) - installing frontend dependencies"
     Push-Location frontend
     npm install
     Pop-Location
@@ -75,8 +75,8 @@ Next steps
 Data notes
 ----------
   data\cache\ is not in git (400+ MB of MAST downloads). First analyses
-  re-download light curves automatically. data\models\, data\datasets\ and
-  data\results\ ARE included, so the trained model and past reports work
-  immediately. If you ever move or rename this folder, re-run:
+  re-download light curves automatically. data\models\ and data\datasets\
+  ARE included, so the trained model works immediately. data\results\ is
+  not, so the Results archive starts empty. If you move this folder, re-run:
   .venv\Scripts\python -m pip install -e .\backend
 "@

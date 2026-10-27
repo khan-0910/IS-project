@@ -15,6 +15,23 @@ passes) ─▶ attention rollout ─▶ batman+emcee transit fit ─▶ report J
 
 ## Running it
 
+**Quick start (friends, any machine).** Needs 64-bit Python 3.11–3.13
+(Windows: tick "Add python.exe to PATH") and Node.js 18+ LTS, plus internet.
+
+```
+git clone https://github.com/khan-0910/IS-project.git
+```
+
+- **Windows:** double-click `START_EXOVET.bat` in the cloned folder.
+- **macOS / Linux:** `bash start_exovet.sh`
+
+First run installs everything (10–20 min); later runs start in seconds. The
+browser opens http://localhost:3000 by itself (API docs:
+http://localhost:8000/docs). The first analysis of a star downloads its TESS
+data (1–3 min); repeats are instant.
+
+**Manual steps:**
+
 - **macOS / Linux**: `bash scripts/mac_setup.sh` (one-time), then
   `bash scripts/serve.sh` — full guide in [docs/MAC_SETUP.md](docs/MAC_SETUP.md).
 - **Windows (native, repo itself is the same)**: clone, then

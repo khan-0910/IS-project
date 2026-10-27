@@ -1,4 +1,4 @@
-# EXOVET — start backend (:8000) + frontend (:3000) on native Windows.
+# EXOVET - start backend (:8000) + frontend (:3000) on native Windows.
 # Run from the repo root:
 #   powershell -ExecutionPolicy Bypass -File scripts\win_run.ps1
 # Or one service at a time:  ... -Mode backend   /   -Mode frontend
@@ -6,7 +6,8 @@
 
 param(
     [ValidateSet("both", "backend", "frontend")]
-    [string]$Mode = "both"
+    [string]$Mode = "both",
+    [switch]$Setup      # run win_setup.ps1 first if no working Python is found
 )
 
 $ErrorActionPreference = "Stop"
@@ -21,6 +22,14 @@ $py = $null
 foreach ($cand in @(".venv\Scripts\python.exe", "vendor\py313\python.exe")) {
     if (Test-Path $cand) {
         try { & $cand -c "import exovet" 2>$null; if ($LASTEXITCODE -eq 0) { $py = (Resolve-Path $cand).Path; break } } catch { }
+    }
+}
+if (-not $py -and $Setup) {
+    Write-Host "First run: installing Python and Node packages (10-20 min)..." -ForegroundColor Cyan
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "win_setup.ps1")
+    if (Test-Path ".venv\Scripts\python.exe") {
+        & ".venv\Scripts\python.exe" -c "import exovet" 2>$null
+        if ($LASTEXITCODE -eq 0) { $py = (Resolve-Path ".venv\Scripts\python.exe").Path }
     }
 }
 if (-not $py) {
@@ -62,5 +71,10 @@ switch ($Mode) {
         Write-Host "API docs  ->  http://localhost:8000/docs"
         Write-Host "Logs      ->  %TEMP%\exovet_backend.log / %TEMP%\exovet_frontend.log"
         Write-Host "To stop: close the two service windows (or Ctrl-C in them)."
+        # open the browser once the frontend answers (first start compiles ~30 s)
+        for ($i = 0; $i -lt 90; $i++) {
+            try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 http://localhost:3000 | Out-Null; Start-Process "http://localhost:3000"; break }
+            catch { Start-Sleep -Seconds 2 }
+        }
     }
 }
