@@ -178,6 +178,22 @@ export function ResultWarnings({ report }: { report: Report }) {
     });
   }
 
+  if (report.classification?.flags.weak_signal) {
+    items.push({
+      sev: "warn",
+      text: `Weak signal: the detection strength (SDE ${report.detection?.sde?.toFixed(1) ?? "—"}) is below the ${report.detection?.sde_threshold ?? 7} needed to call it a real dip. The class shown may describe noise.`,
+      action: "Treat this star as \"no solid detection\"; more TESS sectors may settle it.",
+    });
+  }
+
+  if (report.companion_size?.too_large_for_planet) {
+    items.push({
+      sev: "warn",
+      text: `The transiting object is about ${report.companion_size.radius_rjup?.toFixed(1)} Jupiter radii, too large for a planet.`,
+      action: "See \"How big is the object?\" in the Vetting stage.",
+    });
+  }
+
   const ood = report.classification?.ood;
   if (ood?.flag) {
     items.push({

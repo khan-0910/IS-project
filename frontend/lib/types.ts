@@ -77,7 +77,7 @@ export interface McClassification {
   predictive_entropy: number;
   mutual_information: number;
   n_passes: number;
-  flags: { ambiguous: boolean; unstable: boolean; verdict: string; out_of_distribution?: boolean };
+  flags: { ambiguous: boolean; unstable: boolean; verdict: string; out_of_distribution?: boolean; weak_signal?: boolean };
   ood?: {
     checked: boolean;
     flag: boolean;
@@ -183,7 +183,20 @@ export interface Ingest {
   provenance: Record<string, unknown>;
 }
 
+export interface CompanionSize {
+  checked: boolean;
+  reason?: string;
+  max_planet_rjup?: number;
+  rp_over_rs?: number;
+  stellar_radius_rsun?: number;
+  source?: string;
+  radius_rjup?: number;
+  radius_rearth?: number;
+  too_large_for_planet?: boolean;
+}
+
 export interface Report {
+  companion_size?: CompanionSize;
   status: string;
   target_id: string;
   generated_at: string;

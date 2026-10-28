@@ -43,6 +43,7 @@ _PIPELINE_CONFIG_KEYS = (
     "MCMC_MAX_POINTS", "HARMONIC_CHECK_ENABLED", "HARMONIC_MAX_MULTIPLE",
     "HARMONIC_MIN_POWER_RATIO", "HARMONIC_MIN_CONC_GAIN",
     "HARMONIC_MIN_TRANSITS", "CLASSIFIER_EXCLUDED_SCALARS", "OOD_MIN_Z",
+    "SIZE_MAX_PLANET_RJUP",
 )
 
 
@@ -100,6 +101,46 @@ def get_model():
             _MODEL_CACHE["model"] = model
             _MODEL_CACHE["payload"] = payload
         return _MODEL_CACHE["model"], _MODEL_CACHE["payload"]
+
+
+R_JUP_IN_R_SUN = 0.10045
+
+
+def companion_size(det: dict, fit: dict | None, stellar: dict) -> dict:
+    """Size of the transiting body from Rp/R* and the TIC stellar radius.
+
+    Uses the MCMC Rp/R* when a full fit ran (handles grazing geometry),
+    otherwise sqrt(depth), which UNDER-estimates grazing bodies, so only the
+    "too large" direction is trusted then. Size alone cannot separate a
+    hot Jupiter from a small star (late M dwarfs are ~1 R_Jup), so the only
+    verdict drawn is the one physics allows: above SIZE_MAX_PLANET_RJUP the
+    body is not a planet.
+    """
+    out: dict = {"checked": False, "max_planet_rjup": settings.SIZE_MAX_PLANET_RJUP}
+    rstar = stellar.get("rad") if isinstance(stellar, dict) else None
+    try:
+        rstar = float(rstar)
+    except (TypeError, ValueError):
+        rstar = None
+    if not rstar or not np.isfinite(rstar) or rstar <= 0:
+        out["reason"] = "no TIC stellar radius"
+        return out
+    ratio, source = None, None
+    if fit and fit.get("status") == "ok":
+        ratio = ((fit.get("params") or {}).get("rp_over_rs") or {}).get("median")
+        source = "MCMC Rp/R*"
+    if ratio is None and det.get("depth") and det["depth"] > 0:
+        ratio, source = float(np.sqrt(det["depth"])), "sqrt(depth), lower bound if grazing"
+    if ratio is None:
+        out["reason"] = "no depth or fit"
+        return out
+    r_jup = ratio * rstar / R_JUP_IN_R_SUN
+    out.update(checked=True, rp_over_rs=round(float(ratio), 5),
+               stellar_radius_rsun=round(rstar, 3), source=source,
+               radius_rjup=round(float(r_jup), 3),
+               radius_rearth=round(float(r_jup) * 11.209, 2),
+               too_large_for_planet=bool(r_jup > settings.SIZE_MAX_PLANET_RJUP))
+    return out
 
 
 def analyze_lightcurve(bundle, stellar: dict | None = None,
@@ -214,6 +255,12 @@ def analyze_lightcurve(bundle, stellar: dict | None = None,
                                     list(payload["feature_names"]))
     mc["flags"]["out_of_distribution"] = mc["ood"]["flag"]
     mc["excluded_inputs"] = payload["scaler"].get("excluded_names") or []
+    # below the detection bar there may be no real dip to classify: the
+    # probabilities are kept, but the verdict says so instead of "confident"
+    weak = not report["detection"].get("significant", False)
+    mc["flags"]["weak_signal"] = weak
+    if weak:
+        mc["flags"]["verdict"] = "weak_signal"
     report["classification"] = mc
 
     # 7. attention
@@ -287,6 +334,9 @@ def analyze_lightcurve(bundle, stellar: dict | None = None,
                                 "error": f"{type(exc).__name__}: {exc}"}
         tr.end("finalizing")
 
+    report["companion_size"] = companion_size(report["detection"],
+                                              report.get("transit_fit"),
+                                              stellar or {})
     report["feature_registry"] = feature_registry_json()
     report["total_seconds"] = round(time.time() - t_start, 2)
     tr.merge_into(report)
@@ -327,13 +377,17 @@ def analyze_tic(tic_id: int, fast: bool = False,
     try:
         # catalog metadata is contextual only; bound it so a slow MAST
         # catalog query can never dominate the analysis wall-clock
-        with ThreadPoolExecutor(1) as _ex:
-            _fut = _ex.submit(fetch_stellar_metadata, tic_id)
-            try:
-                stellar = _fut.result(timeout=20)
-            except _FutTimeout:
-                _fut.cancel()
-                stellar = {"_error": "TIC catalog query timed out (non-blocking)"}
+        # no ``with``: its exit waits for the worker, which turned the 20 s
+        # bound into "as long as the catalog query hangs"
+        _ex = ThreadPoolExecutor(1)
+        _fut = _ex.submit(fetch_stellar_metadata, tic_id)
+        try:
+            stellar = _fut.result(timeout=20)
+        except _FutTimeout:
+            _fut.cancel()
+            stellar = {"_error": "TIC catalog query timed out (non-blocking)"}
+        finally:
+            _ex.shutdown(wait=False)
     except ExoVetError:
         stellar = {}
     tr.end("fetching_data")

@@ -164,3 +164,12 @@ HARMONIC_MAX_MULTIPLE = 12
 HARMONIC_MIN_POWER_RATIO = 0.5
 HARMONIC_MIN_CONC_GAIN = 0.15
 HARMONIC_MIN_TRANSITS = 3
+
+# Seconds a single network read may stall before it fails (MAST downloads,
+# catalog queries). Applied as the process-wide socket default in ingest.py.
+NETWORK_TIMEOUT_S = 60
+
+# Largest radius still compatible with a planet (Jupiter radii). Inflated hot
+# Jupiters reach ~2.0-2.1 R_Jup; anything above this is a star or brown dwarf
+# eclipsing. Reported as companion_size.too_large_for_planet.
+SIZE_MAX_PLANET_RJUP = 2.5

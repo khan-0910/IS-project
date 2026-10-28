@@ -81,6 +81,7 @@ def _one_target(tic_id: int, include_fit: bool, gt: dict[int, dict]) -> dict:
         "predicted_class": cls.get("predicted_class"),
         "classification": cls,
         "detection": report.get("detection") or {},
+        "companion_size": report.get("companion_size") or {},
         "ingest": {k: report.get("ingest", {}).get(k)
                    for k in ("n_sectors", "n_points_raw")},
         "run_mode": report.get("run_mode", "full"),

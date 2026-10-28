@@ -168,7 +168,14 @@ def preprocess(bundle: LightCurveBundle) -> CleanResult:
         sstats: dict = {"sector": sec.sector}
         try:
             t, raw, flat, err = _per_sector_clean(sec, sstats, warnings)
-        except (InsufficientDataError, DetrendError, PreprocessingError):
+        except InsufficientDataError as exc:
+            if bundle.n_sectors > 1:
+                # one empty sector should not sink the others; recorded
+                warnings.append(f"Sector {sec.sector} skipped: {exc}")
+                per_sector.append({**sstats, "skipped": str(exc)})
+                continue
+            raise
+        except (DetrendError, PreprocessingError):
             raise
         except Exception as exc:
             raise PreprocessingError(
@@ -184,6 +191,9 @@ def preprocess(bundle: LightCurveBundle) -> CleanResult:
         all_sid.append(np.full(len(t), sid, dtype=np.int64))
         per_sector.append(sstats)
 
+    if not all_t:
+        raise InsufficientDataError(
+            "No sector has enough usable samples after quality filtering.")
     time = np.concatenate(all_t)
     raw = np.concatenate(all_raw)
     flat = np.concatenate(all_flat)

@@ -25,8 +25,10 @@ from exovet.config import settings
 from exovet.utils.jsonio import finite_json, read_json
 
 
-CACHE_SCHEMA = 9  # bump to invalidate entries produced by older report shapes
-                  # (9: v_shape-fixed model restored (Tmag/dist_pc used again)
+CACHE_SCHEMA = 10  # bump to invalidate entries produced by older report shapes
+                  # (10: weak_signal verdict, companion_size, one product
+                  #     per sector, empty sectors skipped, 2026-10-28;
+                  #  9: v_shape-fixed model restored (Tmag/dist_pc used again)
                   #     with OOD training ranges stamped in, 2026-10-25;
                   #  8: Tmag/dist_pc masked from classifier + OOD flag,
                   #     2026-10-25;

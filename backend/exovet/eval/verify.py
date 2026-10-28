@@ -141,6 +141,20 @@ def _why(rec: dict, gt: dict | None) -> list[dict]:
                     f"{settings.MC_MAX_PRED_STD} (MC_MAX_PRED_STD)",
         })
 
+    if flags.get("weak_signal"):
+        reasons.append({
+            "code": "weak_signal",
+            "rule": f"SDE {det.get('sde')} < {settings.TLS_MIN_SIGNAL_SDE:g} "
+                    "(TLS_MIN_SIGNAL_SDE): no significant dip to classify",
+        })
+    size = rec.get("companion_size") or {}
+    if size.get("too_large_for_planet"):
+        reasons.append({
+            "code": "too_large_for_planet",
+            "rule": f"companion {size.get('radius_rjup')} R_Jup > "
+                    f"{settings.SIZE_MAX_PLANET_RJUP:g} (SIZE_MAX_PLANET_RJUP)",
+        })
+
     ood = cls.get("ood") or {}
     if ood.get("flag"):
         names = ", ".join(f"{f['name']} (z={f['z']})"

@@ -6,7 +6,7 @@ import TopBar from "../../components/TopBar";
 import Help from "../../components/Help";
 import Explain from "../../components/Explain";
 import { STAGES } from "../../components/stages";
-import { API, ClassPill, ErrorBox, PageGuide, VerdictPill } from "../../components/ui";
+import { API, ClassPill, ErrorBox, PageGuide, VerdictPill, ticFromText } from "../../components/ui";
 import type { FriendlyError, JobBrief, Report } from "../../lib/types";
 
 type Mode = "quick" | "full";
@@ -209,7 +209,8 @@ function Workspace() {
   }
 
   async function run() {
-    if (!tic) {
+    const ticId = ticFromText(tic);
+    if (!ticId) {
       setErr({ code: "invalid_input", message: "Enter a TIC id first.", action: "Type the star's TIC number, or press “Try Pi Mensae”." });
       return;
     }
@@ -218,7 +219,7 @@ function Workspace() {
       const r = await fetch(`${API}/api/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tic_id: Number(tic), mode }),
+        body: JSON.stringify({ tic_id: ticId, mode }),
       });
       if (!r.ok) {
         const b = await r.json().catch(() => ({}));
@@ -302,10 +303,10 @@ function Workspace() {
           <div className="row">
             <input
               value={tic}
-              onChange={(e) => setTic(e.target.value.replace(/\D/g, ""))}
-              placeholder="TIC id, e.g. 261136679"
+              onChange={(e) => setTic(e.target.value.replace(/[^\dTICtic .-]/g, ""))}
+              placeholder="TIC id, e.g. 261136679 or 55401933.01"
               aria-label="TIC id"
-              inputMode="numeric"
+              inputMode="decimal"
               onKeyDown={(e) => e.key === "Enter" && !running && run()}
               style={{ flex: "1 1 220px", maxWidth: 340 }}
             />

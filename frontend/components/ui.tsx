@@ -105,6 +105,16 @@ export function fmtPeriod(d: number): string {
   return `${(d * 24).toFixed(1)} hours`;
 }
 
+/** "TIC 55401933.01" / "55401933.01" / "TOI-style planet suffix" -> 55401933.
+ *  The ".01" is the planet number on that star; the pipeline analyzes the
+ *  whole star, so only the integer TIC id is sent. null if no id is found. */
+export function ticFromText(s: string): number | null {
+  const m = s.trim().replace(/^TIC[\s-]*/i, "").match(/^(\d+)(?:\.\d+)?$/);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return n > 0 ? n : null;
+}
+
 export function fmtNum(v: number | null | undefined, d = 2, unit = ""): string {
   if (v == null || !Number.isFinite(v)) return "—";
   return v.toFixed(d) + (unit ? ` ${unit}` : "");

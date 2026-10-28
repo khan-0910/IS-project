@@ -4,11 +4,13 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TopBar from "../../components/TopBar";
 import Help from "../../components/Help";
-import { API, CLASS_COLOR, CLASS_LABEL, CLASS_SHORT, ClassPill, PageGuide, Stat } from "../../components/ui";
+import { API, CLASS_COLOR, CLASS_LABEL, CLASS_SHORT, ClassPill, PageGuide, Stat, ticFromText } from "../../components/ui";
 
 const REASON_RULES: Record<string, string> = {
   mc_ambiguous: "top-1 − top-2 margin below the documented ambiguity threshold (0.10)",
   mc_unstable: "per-class std above the instability threshold (0.15)",
+  weak_signal: "the detection is below the SDE threshold, so there may be no real dip to classify",
+  too_large_for_planet: "the transiting body is larger than any planet can be",
   out_of_distribution: "a classifier input lies outside anything seen in training — the probabilities are an extrapolation",
   no_detection: "no significant TLS detection for this target",
   period_mismatch: "TLS period differs from the catalog period by more than 10%",
@@ -147,7 +149,7 @@ function Workspace() {
   useEffect(loadRuns, [loadRuns]);
 
   function parseIds(src: string) {
-    const ids = Array.from(new Set(src.split(/[\s,;]+/).map((t) => t.replace(/^TIC/i, "").trim()).filter((t) => /^\d+$/.test(t)).map(Number).filter((n) => n > 0)));
+    const ids = Array.from(new Set(src.split(/[\s,;]+/).map(ticFromText).filter((n): n is number => n != null)));
     setParsed(ids);
   }
 

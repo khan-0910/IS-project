@@ -18,6 +18,7 @@ import io
 import json
 import os
 import re
+import socket
 import time as _time
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
@@ -27,6 +28,14 @@ import numpy as np
 
 from exovet import __version__
 from exovet.config import settings
+
+# MAST sometimes accepts a connection and then never sends data. lightkurve's
+# product download and astroquery's catalog query have no read timeout of
+# their own, so one stalled socket froze the whole job queue (2026-10-28).
+# Every socket read now fails after this long and surfaces as a typed
+# download error instead.
+if socket.getdefaulttimeout() is None:
+    socket.setdefaulttimeout(settings.NETWORK_TIMEOUT_S)
 from exovet.utils.errors import (
     DataNotFoundError,
     DownloadError,
@@ -278,6 +287,33 @@ def _cache_paths(tic_id: int) -> tuple[Path, Path]:
     return d, d / "bundle.json"
 
 
+def _n_usable(c: SectorCurve) -> int:
+    return int((np.isfinite(c.time) & np.isfinite(c.flux)).sum())
+
+
+def _one_curve_per_sector(curves: list[SectorCurve]) -> list[SectorCurve]:
+    """Keep one product per sector: the one with the most finite flux.
+
+    A sector can come back as several products (SPOC, QLP, TESS-SPOC, ...).
+    They were cached under the same ``sector_N.npz`` name, so the last one
+    written won; for TIC 183374187 that was a product whose flux is all NaN,
+    and the whole analysis failed. Ties keep the earlier (preferred) product.
+    """
+    best: dict = {}
+    order: list = []
+    for c in curves:
+        key = c.sector
+        if key is None:
+            order.append(c)
+            continue
+        if key not in best:
+            best[key] = c
+            order.append(key)
+        elif _n_usable(c) > _n_usable(best[key]):
+            best[key] = c
+    return [best[k] if not isinstance(k, SectorCurve) else k for k in order]
+
+
 def _save_cache(tic_id: int, bundle: LightCurveBundle) -> None:
     d, manifest = _cache_paths(tic_id)
     files = []
@@ -309,6 +345,11 @@ def _load_cache(tic_id: int) -> LightCurveBundle | None:
         return None
     try:
         payload = json.loads(manifest.read_text(encoding="utf-8"))
+        names = [e.get("file") for e in payload["files"]]
+        if len(set(names)) < len(names):
+            # written before one-product-per-sector: same-sector products
+            # overwrote each other on disk, so re-download
+            return None
         sectors = []
         for entry in payload["files"]:
             z = np.load(d / entry["file"])
@@ -445,6 +486,7 @@ def fetch_tess_lightcurve(raw_tic: str | int,
         curves.append(SectorCurve(sector=sector, time=time, flux=flux,
                                   flux_err=err, quality=qual, meta=slim))
 
+    curves = _one_curve_per_sector(curves)
     if not curves:
         raise DataNotFoundError(
             f"TIC {tic_id} has MAST search results, but no downloadable light "

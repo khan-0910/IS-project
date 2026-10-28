@@ -399,6 +399,35 @@ export function VettingStage({ report: rep }: StageProps) {
         </div>
       )}
 
+      {rep.companion_size && (
+        <div className={`card${rep.companion_size.too_large_for_planet ? " tint-rose" : ""}`}>
+          <div className="card-head">
+            <div>
+              <h3 className="h3">How big is the object?</h3>
+              <div className="note small">Dip depth × the star&apos;s catalog radius gives the size of whatever passes in front.</div>
+            </div>
+            <span className={`pill ${rep.companion_size.too_large_for_planet ? "bad" : rep.companion_size.checked ? "ok" : ""}`}>
+              {rep.companion_size.too_large_for_planet ? "TOO LARGE FOR A PLANET" : rep.companion_size.checked ? "PLANET-SIZED OR SMALLER" : "NOT CHECKED"}
+            </span>
+          </div>
+          {rep.companion_size.checked ? (
+            <>
+              <div className="stats mt12">
+                <div className="stat"><div className="label">Radius</div><div className="v">{rep.companion_size.radius_rjup?.toFixed(2)} R♃</div><div className="s">{rep.companion_size.radius_rearth?.toFixed(1)} R⊕</div></div>
+                <div className="stat"><div className="label">Rp / R★</div><div className="v">{rep.companion_size.rp_over_rs?.toFixed(4)}</div><div className="s">{rep.companion_size.source}</div></div>
+                <div className="stat"><div className="label">Star radius</div><div className="v">{rep.companion_size.stellar_radius_rsun?.toFixed(2)} R☉</div><div className="s">TIC catalog</div></div>
+              </div>
+              <p className="note small mt12" style={{ maxWidth: "88ch" }}>
+                Above {rep.companion_size.max_planet_rjup} Jupiter radii the object is a star or brown dwarf, not a planet. Below that, size cannot
+                decide: a hot Jupiter and a small red-dwarf star are about the same size, so the other tests still matter.
+              </p>
+            </>
+          ) : (
+            <p className="note small mt12">Not measured: {rep.companion_size.reason}.</p>
+          )}
+        </div>
+      )}
+
       <div className="card">
         <div className="card-head">
           <div>

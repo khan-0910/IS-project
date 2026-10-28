@@ -119,6 +119,14 @@ def report_markdown_text(rep: dict, job_id: str = "") -> str:
         if (cls.get("flags") or {}).get("ambiguous"):
             a("- **AMBIGUOUS RESULT** — the model did not strongly separate the "
               "leading classes; treat the percentages as ordinal hints.")
+        if (cls.get("flags") or {}).get("weak_signal"):
+            a("- **WEAK SIGNAL** — the detection is below the SDE threshold; "
+              "there may be no real transit, so the class is not a verdict.")
+        size = rep.get("companion_size") or {}
+        if size.get("checked"):
+            a(f"- Companion size: {_fmt(size.get('radius_rjup'), 2)} R_Jup "
+              f"({_fmt(size.get('radius_rearth'), 1)} R⊕) from {size.get('source')}"
+              + (" — **too large for a planet**" if size.get("too_large_for_planet") else ""))
         ood = cls.get("ood") or {}
         if ood.get("flag"):
             feats = ", ".join(f"{f['name']} = {_fmt(f['value'], 3)} (z = {f['z']})"
